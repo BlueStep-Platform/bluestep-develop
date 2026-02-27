@@ -2,14 +2,44 @@ import * as vscode from 'vscode';
 import { UpdateInfo } from '../../../../../types';
 
 /**
+ * Escapes special HTML characters to prevent raw tags from being interpreted by the browser.
+ * @lastreviewed null
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
  * Renders a minimal subset of Markdown (bold, italic, newlines) to HTML.
+ * HTML in the input is escaped first so that raw tags in release notes are
+ * never interpreted by the browser.
  * @lastreviewed null
  */
 function renderMarkdown(text: string): string {
-  return text
+  return escapeHtml(text)
     .replace(/\n/g, '<br>')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>');
+}
+
+/**
+ * Returns the download URL only when it uses the https: scheme.
+ * Falls back to '#' for any other scheme to prevent javascript: or
+ * other potentially dangerous URLs from appearing in the webview.
+ * @lastreviewed null
+ */
+function sanitizeDownloadUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' ? url : '#';
+  } catch {
+    return '#';
+  }
 }
 
 /**
@@ -19,6 +49,7 @@ function renderMarkdown(text: string): string {
 export function getReleaseNotesHtml(updateInfo: UpdateInfo): string {
   const releaseNotes = renderMarkdown(updateInfo.releaseNotes);
   const releasedDate = new Date(updateInfo.publishedAt).toLocaleDateString();
+  const safeDownloadUrl = sanitizeDownloadUrl(updateInfo.downloadUrl);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -62,7 +93,7 @@ export function getReleaseNotesHtml(updateInfo: UpdateInfo): string {
   <h1>B6P Extension v${updateInfo.version}</h1>
   <div class="meta">Released: ${releasedDate}</div>
   <div class="content">${releaseNotes || 'No release notes available.'}</div>
-  <a href="${updateInfo.downloadUrl}" class="download-link">Download Update</a>
+  <a href="${safeDownloadUrl}" class="download-link">Download Update</a>
 </body>
 </html>`;
 }
