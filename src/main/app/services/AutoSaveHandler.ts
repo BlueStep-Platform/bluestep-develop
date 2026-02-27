@@ -18,22 +18,30 @@ const DEBOUNCE_DELAY_MS = 300;
 const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
 /**
- * Tracks in-flight and pending push+snapshot operations per script root.
+ * Tracks in-flight push+snapshot operations per script root using a
+ * promise-chain design.
  *
- * - `running`: an operation is currently executing for this root.
- * - `pending`: the most-recently queued document that is waiting to be
- *              processed once `running` becomes false.  Only the latest
- *              document is kept; earlier pending ones are dropped.
+ * - `latestDocument`: the most-recently requested document for this root.
+ *   Updated by {@link scheduleForRoot} whenever a new save arrives while an
+ *   operation is already running.  The drain loop compares its own snapshot of
+ *   the document against this field after each `await`; if they differ, the
+ *   loop iterates for the newer document ("latest save wins").
+ * - `tail`: the Promise representing the currently running chain.  Held here
+ *   so the entry is never deleted before the chain has completed.
+ *
+ * The entry is created when the first save for a root arrives and deleted
+ * inside the same synchronous continuation that detects an empty queue, so
+ * there is no window in which a newly enqueued document can be silently dropped.
  */
-interface RootSerialState {
-  running: boolean;
-  pending: vscode.TextDocument | null;
+interface RootQueue {
+  latestDocument: vscode.TextDocument;
+  tail: Promise<void>;
 }
 
 /**
- * Per-script-root serialization state.  Keyed by `ScriptRoot.rootUri.toString()`.
+ * Per-script-root operation queues.  Keyed by `ScriptRoot.rootUri.toString()`.
  */
-const rootSerialStates = new Map<string, RootSerialState>();
+const rootQueues = new Map<string, RootQueue>();
 
 /**
  * Performs the actual push + compile-draft + snapshot sequence for one document.
@@ -71,28 +79,58 @@ async function executeAutoSave(document: vscode.TextDocument): Promise<void> {
 }
 
 /**
- * Runs the auto-save operation for `document`, then drains any pending document
- * that arrived while this operation was running.  Cleans up `rootSerialStates`
- * once the queue is empty.
+ * Enqueues an auto-save operation for the given `rootKey`.
+ *
+ * If no chain exists for the root, a new one is created and started.
+ * If a chain is already running, `queue.latestDocument` is updated and the
+ * running drain loop will pick up the change after its current `await`
+ * settles — without any separate flags or delete-then-check steps.
+ *
+ * The entry in {@link rootQueues} is removed inside the same synchronous
+ * continuation that detects an empty queue (i.e., right after the while
+ * condition evaluates to false), so there is no window between "queue looks
+ * empty" and "entry deleted" during which a new arrival could be lost.
  *
  * @param rootKey  `ScriptRoot.rootUri.toString()` for the owning script root.
  * @param document The document that triggered this execution.
  * @lastreviewed null
  */
-async function runSerially(rootKey: string, document: vscode.TextDocument): Promise<void> {
-  await executeAutoSave(document);
+function scheduleForRoot(rootKey: string, document: vscode.TextDocument): void {
+  const existing = rootQueues.get(rootKey);
 
-  // Drain any pending document that arrived while we were running.
-  let state = rootSerialStates.get(rootKey);
-  while (state !== undefined && state.pending !== null) {
-    const next = state.pending;
-    state.pending = null;
-    await executeAutoSave(next);
-    // Re-read state in case a new pending was set during the await above.
-    state = rootSerialStates.get(rootKey);
+  if (existing !== undefined) {
+    // A chain is already running for this root.  Update the latest-document
+    // slot; the drain loop will process it after the current operation settles.
+    existing.latestDocument = document;
+    return;
   }
 
-  rootSerialStates.delete(rootKey);
+  // No chain running – create one and start it.
+  const queue: RootQueue = { latestDocument: document, tail: Promise.resolve() };
+  rootQueues.set(rootKey, queue);
+
+  /**
+   * Drain loop: keep executing as long as a newer document was queued while
+   * the previous execution was in flight.  Cleans up {@link rootQueues} once
+   * the queue is truly empty.
+   */
+  const drainQueue = async (): Promise<void> => {
+    let lastProcessed: vscode.TextDocument | null = null;
+
+    while (queue.latestDocument !== lastProcessed) {
+      lastProcessed = queue.latestDocument;
+      await executeAutoSave(lastProcessed);
+      // After the await, `queue.latestDocument` may have been updated by a
+      // concurrent debounce timer.  If so, the while condition re-enters the
+      // loop for the newer document.
+    }
+
+    // The queue is empty.  Remove the entry in the same synchronous tick so
+    // that any macrotask arriving after this point creates a fresh chain.
+    rootQueues.delete(rootKey);
+  };
+
+  queue.tail = drainQueue();
 }
 
 /**
@@ -101,10 +139,13 @@ async function runSerially(rootKey: string, document: vscode.TextDocument): Prom
  * automatically every time a B6P script file is saved.
  *
  * Rapid successive saves are debounced per document ({@link DEBOUNCE_DELAY_MS}).
- * Overlapping operations against the same script root are serialized with a
- * single-slot pending queue (latest save wins): if an operation is already
- * running for a root, the incoming document replaces any previously queued
- * pending document and will be processed once the running operation finishes.
+ * Overlapping operations against the same script root are serialized via a
+ * promise-chain per root (see {@link scheduleForRoot}): the chain's drain loop
+ * holds the latest-requested document in {@link RootQueue.latestDocument} and
+ * continues executing until no newer document arrived during the last operation,
+ * at which point the queue entry is removed atomically within the same
+ * synchronous continuation — eliminating the window in which a newly queued
+ * document could be silently dropped.
  *
  * Non-B6P files are silently ignored so that normal VS Code saves are
  * unaffected.
@@ -140,18 +181,7 @@ export function handleAutoSave(document: vscode.TextDocument): void {
       return;
     }
 
-    const existing = rootSerialStates.get(rootKey);
-    if (existing?.running) {
-      // An operation is already in flight for this root.  Stash this document
-      // as the pending "next" work, replacing any previously pending document.
-      existing.pending = document;
-      return;
-    }
-
-    // No operation running – start one.
-    const state: RootSerialState = { running: true, pending: null };
-    rootSerialStates.set(rootKey, state);
-    void runSerially(rootKey, document);
+    scheduleForRoot(rootKey, document);
   }, DEBOUNCE_DELAY_MS);
 
   debounceTimers.set(docKey, timer);
