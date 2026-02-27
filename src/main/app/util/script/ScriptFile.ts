@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { CryptoAlgorithms, FileExtensions, FolderNames, Http, MimeTypes, SpecialFiles } from '../../../resources/constants';
 import { App } from "../../App";
 import { SESSION_MANAGER as SM } from '../../b6p_session/SessionManager';
@@ -9,7 +10,6 @@ import { ResponseCodes } from "../network/StatusCodes";
 import { Alert } from '../ui/Alert';
 import { ScriptNode } from "./ScriptNode";
 import { TsConfig } from './TsConfig';
-import { Uri } from 'vscode';
 const fs = FileSystem.getInstance;
 
 /**
@@ -347,8 +347,8 @@ export class ScriptFile extends ScriptNode {
     }
     App.logger.info("Preparing to send file:", this.uri().fsPath);
     App.logger.info("To target formula URI:", arg?.remoteUrlOverrideString);
-    const remoteOverride = new URL(arg?.remoteUrlOverrideString || this.remoteUrl().toString());
     const thisRemote = await this.remoteUrl();
+    const remoteOverride = new URL(arg?.remoteUrlOverrideString || thisRemote.toString());
     remoteOverride.pathname = thisRemote.pathname;
     // we skip snapshots/builds because when they go to be uploaded
     // they will always have been freshly created.
