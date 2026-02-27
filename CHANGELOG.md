@@ -5,6 +5,11 @@ All notable changes to the B6P - BlueStep JavaScript Push/Pull extension will be
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- Push no longer throws `InvalidUriStructureError` for script roots that contain a `.git` directory (e.g. Git-Managed Pull repos). `flattenDirectory` now skips `.git` entries before attempting to create a `ScriptNode` or `ScriptFolder` from them.
+
 ## [0.0.1] - 2025-08-28
 
 ### Added

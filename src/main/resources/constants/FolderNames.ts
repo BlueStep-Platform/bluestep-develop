@@ -11,4 +11,6 @@ export namespace FolderNames {
   export const SNAPSHOT = "snapshot";
   export const DECLARATIONS = "declarations";
   export const DRAFT = "draft";
+  /** The Git version-control metadata folder; never pushed or traversed as a script node. */
+  export const GIT = ".git";
 }

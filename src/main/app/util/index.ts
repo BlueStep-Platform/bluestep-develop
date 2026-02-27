@@ -1,13 +1,13 @@
 import * as path from 'path';
 import * as vscode from "vscode";
 import { PrimitiveNestedObject, Serializable, SourceOps, type ScriptGQLBadResp, type ScriptGQLGoodResp, type ScriptGqlResp } from "../../../../types";
+import { ApiEndpoints, FolderNames, Http, MimeTypes } from '../../resources/constants';
+import { SESSION_MANAGER as SM } from '../b6p_session/SessionManager';
 import { IdUtility } from "./data/IdUtility";
 import { Err } from './Err';
 import { FileSystem } from "./fs/FileSystem";
 import { ScriptFactory } from './script/ScriptFactory';
 import type { ScriptFolder } from './script/ScriptFolder';
-import { ApiEndpoints, Http, MimeTypes } from '../../resources/constants';
-import { SESSION_MANAGER as SM } from '../b6p_session/SessionManager';
 import { Alert } from './ui/Alert';
 
 const fs = FileSystem.getInstance;
@@ -262,12 +262,27 @@ export namespace Util {
     }
     return dirtyDocs;
   }
+  /**
+   * Folder names that are never traversed by {@link flattenDirectory}.
+   * These are directories that cannot be represented as valid script nodes —
+   * attempting to create a {@link ScriptFolder} or {@link ScriptNode} from them
+   * would cause {@link Err.InvalidUriStructureError} to be thrown.
+   * Add entries here to extend the exclusion list without touching traversal logic.
+   */
+  export const FLATTEN_DIRECTORY_EXCLUDES: ReadonlySet<string> = new Set<string>([
+    FolderNames.GIT,   // .git — version-control metadata; not a valid script node
+  ]);
+
   export async function flattenDirectory(dir: ScriptFolder): Promise<vscode.Uri[]> {
     const result: vscode.Uri[] = [];
     const items = await vscode.workspace.fs.readDirectory(dir.uri());
 
     result.push(vscode.Uri.joinPath(dir.uri(), '/')); // include the directory itself
     for (const [name, type] of items) {
+      if (FLATTEN_DIRECTORY_EXCLUDES.has(name)) {
+        // Skip directories that cannot be represented as valid script nodes.
+        continue;
+      }
       const fullPath = vscode.Uri.joinPath(dir.uri(), name);
       if (type === vscode.FileType.Directory) {
         const subFolder = ScriptFactory.createFolder(fullPath);
