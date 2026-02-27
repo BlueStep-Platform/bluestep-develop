@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Push no longer throws `InvalidUriStructureError` for script roots that contain a `.git` directory (e.g. Git-Managed Pull repos). `flattenDirectory` now skips `.git` entries before attempting to create a `ScriptNode` or `ScriptFolder` from them.
+- Auto push+snapshot no longer shows the "remote file has changed" overwrite prompt. A `force` flag has been added to `upload()` / `pushScript()` that bypasses the integrity-check dialog; `AutoSaveHandler` passes `force: true` for both the push and snapshot steps.
 
 ## [0.0.1] - 2025-08-28
 

@@ -1,11 +1,13 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { Util } from '../';
 import { ConfigJsonContent as ConfigDotJsonContent, MetaDataDotJsonContent } from '../../../../../types';
 import { FolderNames, Http, SpecialFiles } from '../../../resources/constants';
+import { App } from '../../App';
 import { SESSION_MANAGER as SM } from '../../b6p_session/SessionManager';
-import { LocalUriParser } from '../data/LocalUriParser';
 import { GlobMatcher } from '../data/GlobMatcher';
-import { Util } from '../';
+import { LocalUriParser } from '../data/LocalUriParser';
+import { ScriptUrlParser } from '../data/ScriptUrlParser';
 import { Err } from '../Err';
 import { FileSystem } from '../fs/FileSystem';
 import { ResponseCodes } from '../network/StatusCodes';
@@ -14,8 +16,6 @@ import { ScriptFactory } from './ScriptFactory';
 import { ScriptFolder } from './ScriptFolder';
 import { ScriptRoot } from './ScriptRoot';
 import { TsConfig } from './TsConfig';
-import { App } from '../../App';
-import { ScriptUrlParser } from '../data/ScriptUrlParser';
 const fs = FileSystem.getInstance;
 
 /**
@@ -487,7 +487,7 @@ export abstract class ScriptNode implements ScriptPathElement {
    * @throws an {@link Err.UserCancelledError} When the user cancels the upload due to some issue that required user intervention
    * @lastreviewed 2025-10-01
    */
-  abstract upload(arg?: { remoteUrlOverrideString?: string, isSnapshot?: boolean; }): Promise<Response | void>;
+  abstract upload(arg?: { remoteUrlOverrideString?: string, isSnapshot?: boolean, force?: boolean; }): Promise<Response | void>;
 
   /**
    * Downloads the remote node and writes it to the local file system.

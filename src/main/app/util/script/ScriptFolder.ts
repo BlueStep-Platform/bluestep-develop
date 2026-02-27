@@ -29,7 +29,7 @@ export class ScriptFolder extends ScriptNode {
    * @lastreviewed 2025-10-01
    * @param _remoteUrlOverrideString NOT USED
    */
-  public async upload(_arg?: { remoteUrlOverrideString?: string, isSnapshot?: boolean; }): Promise<Response | void> {
+  public async upload(_arg?: { remoteUrlOverrideString?: string, isSnapshot?: boolean, force?: boolean; }): Promise<Response | void> {
     App.logger.info(`ScriptFolder.upload() called on ${this.path()}; no action taken.`);
     return;
   }

@@ -8,9 +8,9 @@ import { LocalUriParser } from '../util/data/LocalUriParser';
 import { ScriptUrlParser } from '../util/data/ScriptUrlParser';
 import { Err } from '../util/Err';
 import { ScriptFactory } from '../util/script/ScriptFactory';
+import { ScriptRoot } from '../util/script/ScriptRoot';
 import { Alert } from '../util/ui/Alert';
 import { ProgressHelper } from '../util/ui/ProgressHelper';
-import { ScriptRoot } from '../util/script/ScriptRoot';
 
 /**
  * Pushes a script to a WebDAV location.
@@ -18,7 +18,7 @@ import { ScriptRoot } from '../util/script/ScriptRoot';
  * @param sourceOps The options for oveerriding the source location
  * @returns A promise that resolves when the push is complete.
  */
-export default async function ({ overrideFormulaUrl, sourceOps, skipMessage, isSnapshot, scriptRoot }: { overrideFormulaUrl?: string, sourceOps?: SourceOps, skipMessage?: boolean, isSnapshot?: boolean, scriptRoot?: ScriptRoot; }): Promise<void> {
+export default async function ({ overrideFormulaUrl, sourceOps, skipMessage, isSnapshot, scriptRoot, force }: { overrideFormulaUrl?: string, sourceOps?: SourceOps, skipMessage?: boolean, isSnapshot?: boolean, scriptRoot?: ScriptRoot, force?: boolean; }): Promise<void> {
   try {
     let sr: ScriptRoot;
     const targetFormulaOverride = overrideFormulaUrl || await vscode.window.showInputBox({ prompt: 'Paste in the target formula URI' });
@@ -47,7 +47,7 @@ export default async function ({ overrideFormulaUrl, sourceOps, skipMessage, isS
 
     // Create tasks for progress helper
     const pushTasks = snList.map(sn => ({
-      execute: () => sn.upload({ remoteUrlOverrideString: targetFormulaOverride, isSnapshot }),
+      execute: () => sn.upload({ remoteUrlOverrideString: targetFormulaOverride, isSnapshot, force }),
       description: `scripts`
     }));
 

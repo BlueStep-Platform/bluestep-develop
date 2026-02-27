@@ -340,7 +340,7 @@ export class ScriptFile extends ScriptNode {
     return !this.isTypescript();
   }
 
-  async upload(arg?: { remoteUrlOverrideString?: string, isSnapshot?: boolean; }): Promise<Response | void> {
+  async upload(arg?: { remoteUrlOverrideString?: string, isSnapshot?: boolean, force?: boolean; }): Promise<Response | void> {
     if (await this.isFolder()) {
       //TODO remove this when we are confident it isn't needed anymore
       throw new Err.ScriptOperationError("somehow a folder got created to upload with this method. ");
@@ -352,7 +352,8 @@ export class ScriptFile extends ScriptNode {
     remoteOverride.pathname = thisRemote.pathname;
     // we skip snapshots/builds because when they go to be uploaded
     // they will always have been freshly created.
-    if (!this.isInSnapshot() && !(await this.isInItsRespectiveBuildFolder()) && !(await this.oldIntegrityMatches())) {
+    // we also skip the integrity check when force is true (e.g. auto-save).
+    if (!arg?.force && !this.isInSnapshot() && !(await this.isInItsRespectiveBuildFolder()) && !(await this.oldIntegrityMatches())) {
       const OVERWRITE = 'Overwrite';
       const CANCEL = 'Cancel';
       const overwrite = await Alert.prompt(
