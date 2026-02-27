@@ -9,5 +9,12 @@
         "dist": true // set this to false to include "dist" folder in search results
     },
     // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
-    "typescript.tsc.autoDetect": "off"
+    "typescript.tsc.autoDetect": "off",
+    
+    "editor.codeActionsOnSave": {
+        // We want to organize imports on save, but we don't want to use the default "file" source since it can cause unwanted edits. Instead, we use "explicit" which only organizes imports when we explicitly trigger it or when we have "source.organizeImports" set to "explicit" as below.
+        "source.organizeImports": "explicit",
+        // Automatically apply ESLint auto-fixable rules (e.g. curly braces) on every save.
+        "source.fixAll.eslint": "explicit"
+    }
 }
