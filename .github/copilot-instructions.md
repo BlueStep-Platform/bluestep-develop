@@ -90,6 +90,10 @@ npm run package-extension  # Create .vsix package
 - Controlled by the `bsjs-push-pull.autoSave.enabled` setting (default: `false`)
 - On save: performs a silent push then compiles draft + silent snapshot push
 - Non-B6P files are silently ignored via catch; errors already surfaced to the user are re-swallowed
+- **Race condition prevention**: Two-stage strategy to avoid overlapping operations:
+  - *Per-document debounce* (`DEBOUNCE_DELAY_MS = 300 ms`): rapid saves of the same file reset the timer so only the final save fires ("latest save wins").
+  - *Per-script-root serial queue*: after the debounce fires the script root is resolved via `ScriptFactory.createScriptRoot()`. If an operation is already running for that root, the incoming document is stashed in a single-slot pending queue (replacing any previously pending request). Once the running operation completes, the pending document is processed by `runSerially()`.
+  - Both `debounceTimers` and `rootSerialStates` are module-level `Map`s that live for the lifetime of the extension host.
 
 ### Git-Managed Pull
 - Both "Pull Script" (`pull.ts`) and "Pull Current Script" (`pullCurrent.ts`) check for a

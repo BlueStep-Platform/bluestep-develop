@@ -1,17 +1,17 @@
 import * as vscode from 'vscode';
-import { type ReadOnlyMap, type ExtensionPackageJson } from '../../../types';
+import { type ExtensionPackageJson, type ReadOnlyMap } from '../../../types';
+import { OutputChannels, SettingsKeys } from '../resources/constants';
 import { Auth } from './authentication';
 import { SESSION_MANAGER as SM } from './b6p_session/SessionManager';
-import { OutputChannels, SettingsKeys } from '../resources/constants';
+import { ORG_CACHE as OC } from './cache/OrgCache';
 import { ContextNode } from './context/ContextNode';
 import ctrlPCommands from './ctrl-p-commands';
+import { handleAutoSave } from './services/AutoSaveHandler';
 import readOnlyCheck from './services/ReadOnlyChecker';
 import { UPDATE_MANAGER as UM } from './services/UpdateManager';
-import { handleAutoSave } from './services/AutoSaveHandler';
-import { SettingsWrapper } from './util/PseudoMaps';
 import { Err } from './util/Err';
+import { SettingsWrapper } from './util/PseudoMaps';
 import { Alert } from './util/ui/Alert';
-import { ORG_CACHE as OC } from './cache/OrgCache';
 
 
 
@@ -150,7 +150,7 @@ export const App = new class extends ContextNode {
 
     // Register the auto-save listener
     vscode.workspace.onDidSaveTextDocument(document => {
-      void handleAutoSave(document);
+      handleAutoSave(document);
     }, undefined, this.context.subscriptions);
 
     // Initialize dependancies

@@ -218,8 +218,8 @@ export const UPDATE_MANAGER = new class extends ContextNode {
         headers: this.getGitHubHeaders(),
         signal: AbortSignal.timeout(10_000),
       });
-      if (nullStatuses.includes(response.status)) return null;
-      if (!response.ok) throw new Err.GitHubApiError(response.status);
+      if (nullStatuses.includes(response.status)) { return null; }
+      if (!response.ok) { throw new Err.GitHubApiError(response.status); }
       return await response.json() as T;
     } catch (error) {
       this.handleGitHubFetchError(error);
@@ -236,7 +236,7 @@ export const UPDATE_MANAGER = new class extends ContextNode {
       `${this.repoApiBase}${GitHubUrls.RELEASES_LATEST_PATH}`,
       [404]
     );
-    if (!release || release.draft || release.prerelease) return null;
+    if (!release || release.draft || release.prerelease) { return null; }
     return release;
   }
 
