@@ -683,24 +683,29 @@ export class ScriptRoot {
    */
   public async getPushableNodes(snapshot: boolean = false): Promise<ScriptNode[]> {
     const flattenedDraft = await this.getDraftFolder().flatten();
+
+    // Run all per-file async checks in parallel across every file at once,
+    // rather than sequentially awaiting each one inside a loop.
+    const results = await Promise.all(
+      flattenedDraft.map(async f => {
+        const reason = await f.getReasonToNotPush();
+        // Only check build-folder membership when needed (not a snapshot, and no other exclusion reason).
+        const isInBuild = (!reason && !snapshot) ? await f.isInItsRespectiveBuildFolder() : false;
+        return { f, reason, isInBuild };
+      })
+    );
+
     const pushableNodes: ScriptNode[] = [];
-    for (const f of flattenedDraft) {
-      const reason = await f.getReasonToNotPush();
+    for (const { f, reason, isInBuild } of results) {
       if (reason) {
         App.logger.info(`Excluding draft file from push: ${f.path()} (${reason})`);
         continue;
       }
-      // reasoning: if it's a snapshot, we push every "standard" file.
-      // if it's not a snapshot push, we exclude anything in a build folder
-      // and we exclude anything that has a reason to not push (like being the root folder, etc).
-      const isSnapshotOrNotInBuild = snapshot || !(await f.isInItsRespectiveBuildFolder());
-
-      const fileName = f.path();
-      if (isSnapshotOrNotInBuild) {
-        pushableNodes.push(f);
-      } else {
-        App.logger.info(`Excluding file in build folder from push: ${fileName}`);
+      if (isInBuild) {
+        App.logger.info(`Excluding file in build folder from push: ${f.path()}`);
+        continue;
       }
+      pushableNodes.push(f);
     }
 
     return pushableNodes;
