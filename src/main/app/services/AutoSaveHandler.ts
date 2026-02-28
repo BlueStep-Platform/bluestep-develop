@@ -1,8 +1,10 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { App } from '../App';
 import pushScript from '../ctrl-p-commands/push';
 import { Err } from '../util/Err';
 import { ScriptFactory } from '../util/script/ScriptFactory';
+import { Alert } from '../util/ui/Alert';
 
 /**
  * Milliseconds to wait after the last save event for a given document before
@@ -67,6 +69,7 @@ async function executeAutoSave(document: vscode.TextDocument): Promise<void> {
     await pushScript({ overrideFormulaUrl, skipMessage: true, force: true, onlyChanged: true, isSnapshot: true, scriptRoot: sr });
 
     App.logger.info(`Auto-save: completed for ${document.uri.fsPath}`);
+    void Alert.info(`$(check) Auto-save complete: ${path.basename(document.uri.fsPath)}`);
   } catch (e) {
     if (e instanceof Err.AlreadyAlertedError) {
       // Error was already surfaced to the user by a lower-level call; nothing more to do.
