@@ -104,6 +104,28 @@ export class ScriptFile extends ScriptNode {
   }
 
   /**
+   * Returns whether the local file content has changed since it was last pushed to remote.
+   *
+   * Computes the current SHA-512 hash of the local file and compares it against the
+   * `lastVerifiedHash` stored in `pushPullRecords` by {@link touch}.  No network call is
+   * needed — the comparison is entirely local.
+   *
+   * Returns `true` (push required) when:
+   * - the file has never been pushed (no metadata record exists), or
+   * - the current hash differs from `lastVerifiedHash`.
+   * @lastreviewed null
+   */
+  public override async hasLocallyChangedSinceLastPush(): Promise<boolean> {
+    const lastVerifiedHash = await this.getLastVerifiedHash();
+    if (!lastVerifiedHash) {
+      // No record means never pushed — must push.
+      return true;
+    }
+    const currentHash = await this.getHash();
+    return currentHash !== lastVerifiedHash;
+  }
+
+  /**
    * Gets the last verified hash from the metadata for this node, or `null` if not found.
    */
   public async getLastVerifiedHash(): Promise<string | null> {

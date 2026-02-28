@@ -681,7 +681,17 @@ export class ScriptRoot {
    * 
    * @lastreviewed 2025-10-01
    */
-  public async getPushableNodes(snapshot: boolean = false): Promise<ScriptNode[]> {
+  /**
+   * Gets all draft folder nodes that are eligible for pushing.
+   *
+   * @param snapshot When `true`, build-folder contents are included (snapshot pushes include compiled output).
+   * @param onlyChanged When `true`, files whose local hash matches their last-pushed `lastVerifiedHash` are
+   *   silently skipped.  This avoids redundant network requests for unchanged files and is the right default
+   *   for automated operations such as auto-save.  Manual pushes leave this `false` so that every file is
+   *   always (re-)sent, regardless of local-change state.
+   * @lastreviewed null
+   */
+  public async getPushableNodes(snapshot: boolean = false, onlyChanged: boolean = false): Promise<ScriptNode[]> {
     const flattenedDraft = await this.getDraftFolder().flatten();
 
     // Run all per-file async checks in parallel across every file at once,
@@ -691,18 +701,24 @@ export class ScriptRoot {
         const reason = await f.getReasonToNotPush();
         // Only check build-folder membership when needed (not a snapshot, and no other exclusion reason).
         const isInBuild = (!reason && !snapshot) ? await f.isInItsRespectiveBuildFolder() : false;
-        return { f, reason, isInBuild };
+        // Only perform the (purely local) hash check when the caller has opted in.
+        const hasChanged = (!reason && !isInBuild && onlyChanged) ? await f.hasLocallyChangedSinceLastPush() : true;
+        return { f, reason, isInBuild, hasChanged };
       })
     );
 
     const pushableNodes: ScriptNode[] = [];
-    for (const { f, reason, isInBuild } of results) {
+    for (const { f, reason, isInBuild, hasChanged } of results) {
       if (reason) {
         App.logger.info(`Excluding draft file from push: ${f.path()} (${reason})`);
         continue;
       }
       if (isInBuild) {
         App.logger.info(`Excluding file in build folder from push: ${f.path()}`);
+        continue;
+      }
+      if (!hasChanged) {
+        App.logger.info(`Skipping unchanged local file: ${f.path()}`);
         continue;
       }
       pushableNodes.push(f);

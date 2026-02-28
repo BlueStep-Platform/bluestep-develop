@@ -496,6 +496,21 @@ export abstract class ScriptNode implements ScriptPathElement {
   abstract download(): Promise<Response>;
 
   /**
+   * Returns whether the local file content has changed since it was last pushed to remote.
+   *
+   * The base-class implementation conservatively returns `true` (always push) for node types
+   * that do not track per-file hashes (e.g. {@link ScriptFolder}).  {@link ScriptFile} overrides
+   * this with an actual SHA-512 comparison against the `lastVerifiedHash` stored in metadata.
+   *
+   * A return value of `true` means "the file should be (re-)pushed".
+   * A return value of `false` means "the file is unchanged and can safely be skipped".
+   * @lastreviewed null
+   */
+  public async hasLocallyChangedSinceLastPush(): Promise<boolean> {
+    return true;
+  }
+
+  /**
    * @returns Whether the current node is a folder
    */
   public async isFolder() {
