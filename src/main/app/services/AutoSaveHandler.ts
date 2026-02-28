@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
+import type { AutoSaveTrigger } from '../../../../types';
 import { App } from '../App';
 import pushScript from '../ctrl-p-commands/push';
 import { Err } from '../util/Err';
@@ -137,30 +138,15 @@ function scheduleForRoot(rootKey: string, document: vscode.TextDocument): void {
 }
 
 /**
- * Handles the auto-save feature.  When enabled via the
- * `bsjs-push-pull.autoSave.enabled` setting, a push and snapshot are triggered
- * automatically every time a B6P script file is saved.
+ * Debounces an auto-push+snapshot for the given document and enqueues it via
+ * {@link scheduleForRoot} once the debounce window has elapsed.
  *
- * Rapid successive saves are debounced per document ({@link DEBOUNCE_DELAY_MS}).
- * Overlapping operations against the same script root are serialized via a
- * promise-chain per root (see {@link scheduleForRoot}): the chain's drain loop
- * holds the latest-requested document in {@link RootQueue.latestDocument} and
- * continues executing until no newer document arrived during the last operation,
- * at which point the queue entry is removed atomically within the same
- * synchronous continuation — eliminating the window in which a newly queued
- * document could be silently dropped.
+ * Shared by {@link handleAutoSave} and {@link handleAutoBuild}.
  *
- * Non-B6P files are silently ignored so that normal VS Code saves are
- * unaffected.
- *
- * @param document The document that was just saved.
+ * @param document The document to push and snapshot.
  * @lastreviewed null
  */
-export function handleAutoSave(document: vscode.TextDocument): void {
-  if (!App.settings.get('autoSave').enabled) {
-    return;
-  }
-
+function triggerForDocument(document: vscode.TextDocument): void {
   const docKey = document.uri.toString();
 
   // Clear any existing debounce timer for this document.
@@ -188,4 +174,72 @@ export function handleAutoSave(document: vscode.TextDocument): void {
   }, DEBOUNCE_DELAY_MS);
 
   debounceTimers.set(docKey, timer);
+}
+
+/**
+ * Handles the auto-save feature.  When the `bsjs-push-pull.autoSave.trigger`
+ * setting is `'onSave'`, a push and snapshot are triggered automatically every
+ * time a B6P script file is saved.
+ *
+ * Rapid successive saves are debounced per document ({@link DEBOUNCE_DELAY_MS}).
+ * Overlapping operations against the same script root are serialized via a
+ * promise-chain per root (see {@link scheduleForRoot}): the chain's drain loop
+ * holds the latest-requested document in {@link RootQueue.latestDocument} and
+ * continues executing until no newer document arrived during the last operation,
+ * at which point the queue entry is removed atomically within the same
+ * synchronous continuation — eliminating the window in which a newly queued
+ * document could be silently dropped.
+ *
+ * Non-B6P files are silently ignored so that normal VS Code saves are
+ * unaffected.
+ *
+ * @param document The document that was just saved.
+ * @lastreviewed null
+ */
+export function handleAutoSave(document: vscode.TextDocument): void {
+  if (App.settings.get('autoSave').trigger !== 'onSave') {
+    return;
+  }
+
+  triggerForDocument(document);
+}
+
+/**
+ * Handles the auto-build feature.  When the `bsjs-push-pull.autoSave.trigger`
+ * setting is `'onBuild'`, a push and snapshot are triggered for the currently
+ * active B6P document whenever a build-group task starts (e.g. Ctrl+Shift+B).
+ *
+ * If no editor is active, or the active editor is not a B6P file, the call is
+ * silently ignored.
+ *
+ * @param task The VS Code task that just started.
+ * @lastreviewed null
+ */
+export function handleAutoBuild(task: vscode.Task): void {
+  if (App.settings.get('autoSave').trigger !== 'onBuild') {
+    return;
+  }
+
+  // Only react to build-group tasks.
+  if (task.group?.id !== vscode.TaskGroup.Build.id) {
+    return;
+  }
+
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+
+  triggerForDocument(activeEditor.document);
+}
+
+/**
+ * Returns the current auto-save trigger setting.
+ *
+ * Convenience accessor used by tests and UI components.
+ *
+ * @lastreviewed null
+ */
+export function getAutoSaveTrigger(): AutoSaveTrigger {
+  return App.settings.get('autoSave').trigger;
 }

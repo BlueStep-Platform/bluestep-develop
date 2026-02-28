@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
-import type { Settings, Serializable } from "../../../../../types";
+import { Util } from "..";
+import type { Serializable, Settings } from "../../../../../types";
 import { App } from "../../App";
 import { Alert } from "../ui/Alert";
-import { Util } from "..";
-import { TypedMap } from "./TypedMap";
 import { Persistable } from "./Persistable";
+import { TypedMap } from "./TypedMap";
 
 /**
  * A wrapper around the vscode settings for this extension to provide typed access and modification.
@@ -23,7 +23,7 @@ export class SettingsWrapper extends TypedMap<Settings> implements Persistable {
     debugMode: { enabled: false, anyDomainOverrideUrl: "U131364=https://templateassisted.myassn.com/", versionOverride: "1.1.0" },
     updateCheck: { enabled: true, showNotifications: true },
     squelch: { pullComplete: false, pushComplete: false },
-    autoSave: { enabled: false }
+    autoSave: { trigger: 'never' }
   };
 
   constructor() {

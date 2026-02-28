@@ -98,11 +98,17 @@
         "order": 3,
         "id": "bsjs-push-pull.autoSave",
         "properties": {
-          "bsjs-push-pull.autoSave.enabled": {
+          "bsjs-push-pull.autoSave.trigger": {
             "order": 0,
-            "type": "boolean",
-            "description": "Automatically push and snapshot the current B6P script whenever a file is saved",
-            "default": false
+            "type": "string",
+            "enum": ["never", "onSave", "onBuild"],
+            "enumDescriptions": [
+              "Disable automatic push+snapshot",
+              "Automatically push and snapshot whenever a B6P file is saved",
+              "Automatically push and snapshot when a build task runs (Ctrl+Shift+B)"
+            ],
+            "description": "Controls when the automatic push+snapshot is triggered",
+            "default": "never"
           }
         }
       }

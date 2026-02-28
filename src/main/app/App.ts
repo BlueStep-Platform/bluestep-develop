@@ -6,7 +6,7 @@ import { SESSION_MANAGER as SM } from './b6p_session/SessionManager';
 import { ORG_CACHE as OC } from './cache/OrgCache';
 import { ContextNode } from './context/ContextNode';
 import ctrlPCommands from './ctrl-p-commands';
-import { handleAutoSave } from './services/AutoSaveHandler';
+import { handleAutoBuild, handleAutoSave } from './services/AutoSaveHandler';
 import readOnlyCheck from './services/ReadOnlyChecker';
 import { UPDATE_MANAGER as UM } from './services/UpdateManager';
 import { Err } from './util/Err';
@@ -151,6 +151,11 @@ export const App = new class extends ContextNode {
     // Register the auto-save listener
     vscode.workspace.onDidSaveTextDocument(document => {
       handleAutoSave(document);
+    }, undefined, this.context.subscriptions);
+
+    // Register the auto-build listener
+    vscode.tasks.onDidStartTask(event => {
+      handleAutoBuild(event.execution.task);
     }, undefined, this.context.subscriptions);
 
     // Initialize dependancies
