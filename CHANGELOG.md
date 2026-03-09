@@ -62,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed credential storage issues
 - Fixed file path handling for different OSes
 - Fixed issues with large file uploads/downloads
-- 
+
 ## [2026.2.27]
 
 ### Added
