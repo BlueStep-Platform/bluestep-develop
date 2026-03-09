@@ -9,8 +9,9 @@ import { TypedMap } from "./TypedMap";
 /**
  * A wrapper around the vscode settings for this extension to provide typed access and modification.
  * 
- * A convention is used where the settings key in vscode is `bluestep-develop.<settingKey>`
- * and nested keys are represented with dot notation, e.g. `bluestep-develop.nested.key`.
+ * A convention is used where the settings key in vscode is `<appKey>.<settingKey>`
+ * (where `<appKey>` is the value of `App.appKey`) and nested keys are represented
+ * with dot notation, e.g. `<appKey>.nested.key`.
  * 
  * We very specifically want to funnel all active settings changes through this class
  * so that we can ensure that the settings are always in sync with the appropriate context variables
@@ -49,7 +50,7 @@ export class SettingsWrapper extends TypedMap<Settings> implements Persistable {
 
   set<K extends keyof Settings>(key: K, value: Settings[K]): this {
     super.set(key, value);
-    console.log(`Setting context key: bluestep-develop.${key} to ${JSON.stringify(value)}`);
+    console.log(`Setting context key: ${App.appKey}.${key} to ${JSON.stringify(value)}`);
     this.store();
     return this;
   }
@@ -79,7 +80,7 @@ export class SettingsWrapper extends TypedMap<Settings> implements Persistable {
       const config = vscode.workspace.getConfiguration(App.appKey);
 
       // Set context variable for immediate UI responsiveness
-      vscode.commands.executeCommand('setContext', `bluestep-develop.${key}`, value);
+      vscode.commands.executeCommand('setContext', `${App.appKey}.${key}`, value);
 
       if (update) {
         try {
