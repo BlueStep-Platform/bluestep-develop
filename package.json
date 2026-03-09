@@ -2,7 +2,7 @@
   "name": "bluestep-develop",
   "displayName": "B6P Push/Pull",
   "description": "Sync JavaScript files with BlueStep systems via WebDAV",
-  "version": "2026.03.09.01",
+  "version": "2026.03.09.02",
   "publisher": "bluestep-systems",
   "repository": {
     "type": "git",
