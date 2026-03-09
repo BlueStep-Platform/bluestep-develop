@@ -149,8 +149,17 @@ async function cleanupUnusedRemotePaths(localRootFolderUri?: vscode.Uri, remoteR
   const deleteResults = await Promise.allSettled(Array.from(pathsToDelete).map(async (remotePath) => {
     App.logger.info("Deleting unused remote path:" + remotePath);
     const response = await SM.fetch(remotePath, { method: "DELETE" });
-    if (!response.ok) {
-      throw new Error(`Failed to delete remote path: ${remotePath} (status ${response.status})`);
+    try {
+      if (!response.ok) {
+        throw new Error(`Failed to delete remote path: ${remotePath} (status ${response.status})`);
+      }
+    } finally {
+      try {
+        // Drain the response body to allow the underlying connection to be reused.
+        await response.arrayBuffer();
+      } catch {
+        // Ignore errors while draining the body; the main error (if any) is thrown above.
+      }
     }
   }));
 
