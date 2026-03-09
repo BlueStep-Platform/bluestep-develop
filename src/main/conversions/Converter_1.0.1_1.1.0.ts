@@ -16,7 +16,7 @@ export class Converter1_0_1_to_1_1_0 extends Converter {
         const sf = ScriptFactory.createFile(file);
         const sr = sf.getScriptRoot();
         const metaDataDotJson = await sr.getAsFolder().getMetadataDotJson();
-        const baseRemoteUrl = await sr.toScriptbaseRemoteUrl();
+        const baseRemoteUrl = await sr.toScriptBaseRemoteUrl();
 
         const displayName = metaDataDotJson.displayName || (() => { throw new Error("Missing displayName in metadata"); })();
         const U = await new OrgWorker(baseRemoteUrl).getU();
