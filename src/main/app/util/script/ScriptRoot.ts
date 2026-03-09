@@ -325,7 +325,7 @@ export class ScriptRoot {
     }
     try {
       // this will fail if there is no webdavId.
-      this.scriptParser = new ScriptUrlParser((await this.toScriptbaseRemoteUrl()).toString());
+      this.scriptParser = new ScriptUrlParser((await this.toScriptBaseRemoteUrl()).toString());
       const key = await this.scriptParser.getScriptBaseKey();
       await this.modifyMetaData(meta => {
         meta.scriptKey = key;
@@ -376,7 +376,7 @@ export class ScriptRoot {
    * Returns a base {@link URL} suitable for pull and push operations.
    * @lastreviewed 2025-09-15
    */
-  public async toScriptbaseRemoteUrl(): Promise<URL> {
+  public async toScriptBaseRemoteUrl(): Promise<URL> {
     const urlString = await this.toScriptBaseRemoteString();
     return new URL(urlString);
   }

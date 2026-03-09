@@ -268,7 +268,7 @@ export class ScriptFile extends ScriptNode {
    */
   public async remoteUrl(parser?: ScriptUrlParser): Promise<URL> {
 
-    const remoteBaseUrl = await this.getScriptRoot(parser).toScriptbaseRemoteUrl();
+    const remoteBaseUrl = await this.getScriptRoot(parser).toScriptBaseRemoteUrl();
     App.isDebugMode() && console.log("base remote URL:", remoteBaseUrl.toString());
     const newUrl = new URL(remoteBaseUrl);
     if (this.parser.type === "root") {

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Auto-push trigger modes** – `bsjs-push-pull.autoSave.enabled` (boolean) has been replaced by
+  `bsjs-push-pull.autoSave.trigger` (enum: `never` | `onSave` | `onBuild`).  Select `onBuild` to
+  push and snapshot the active B6P file whenever a build task runs (Ctrl+Shift+B).
+
 ### Fixed
 - Push no longer throws `InvalidUriStructureError` for script roots that contain a `.git` directory (e.g. Git-Managed Pull repos). `flattenDirectory` now skips `.git` entries before attempting to create a `ScriptNode` or `ScriptFolder` from them.
 - Auto push+snapshot no longer shows the "remote file has changed" overwrite prompt. A `force` flag has been added to `upload()` / `pushScript()` that bypasses the integrity-check dialog; `AutoSaveHandler` passes `force: true` for both the push and snapshot steps.
@@ -57,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed credential storage issues
 - Fixed file path handling for different OSes
 - Fixed issues with large file uploads/downloads
-- 
+
 ## [2026.2.27]
 
 ### Added

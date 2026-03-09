@@ -523,11 +523,22 @@ export type Settings = {
    */
   autoSave: {
     /**
-     * When true, automatically pushes and snapshots the script whenever a file is saved.
+     * Controls when the automatic push+snapshot is triggered.
+     * - `'never'`   – feature is disabled.
+     * - `'onSave'`  – triggers whenever a B6P file is saved.
+     * - `'onBuild'` – triggers when a build task (Ctrl+Shift+B) starts.
      */
-    enabled: boolean;
+    trigger: AutoSaveTrigger;
   };
 };
+
+/**
+ * The trigger mode for the auto-save push+snapshot feature.
+ * - `'never'`   – feature is disabled.
+ * - `'onSave'`  – triggers whenever a B6P file is saved.
+ * - `'onBuild'` – triggers when a build task (Ctrl+Shift+B) starts.
+ */
+export type AutoSaveTrigger = 'never' | 'onSave' | 'onBuild';
 
 /**
  * TypeScript configuration options (tsconfig.json structure).

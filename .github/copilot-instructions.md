@@ -86,9 +86,14 @@ npm run package-extension  # Create .vsix package
 
 ### Auto-Save Push+Snapshot
 - Implemented in `src/main/app/services/AutoSaveHandler.ts`
-- Registered as a `vscode.workspace.onDidSaveTextDocument` listener in `App.init()`
-- Controlled by the `bsjs-push-pull.autoSave.enabled` setting (default: `false`)
-- On save: performs a silent push then compiles draft + silent snapshot push
+- Registered as a `vscode.workspace.onDidSaveTextDocument` listener (for `onSave` mode) and a
+  `vscode.tasks.onDidStartTask` listener (for `onBuild` mode) in `App.init()`
+- Controlled by the `bsjs-push-pull.autoSave.trigger` setting (enum: `never` | `onSave` | `onBuild`;
+  default: `'never'`)
+  - `never`   – feature disabled
+  - `onSave`  – triggers on file save (previous behaviour)
+  - `onBuild` – triggers when a build-group task starts (e.g. Ctrl+Shift+B)
+- On trigger: performs a silent push then compiles draft + silent snapshot push
 - Non-B6P files are silently ignored via catch; errors already surfaced to the user are re-swallowed
 - **Race condition prevention**: Two-stage strategy to avoid overlapping operations:
   - *Per-document debounce* (`DEBOUNCE_DELAY_MS = 300 ms`): rapid saves of the same file reset the timer so only the final save fires ("latest save wins").

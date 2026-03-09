@@ -6,7 +6,7 @@ import { SESSION_MANAGER as SM } from './b6p_session/SessionManager';
 import { ORG_CACHE as OC } from './cache/OrgCache';
 import { ContextNode } from './context/ContextNode';
 import ctrlPCommands from './ctrl-p-commands';
-import { handleAutoSave } from './services/AutoSaveHandler';
+import { handleAutoBuild, handleAutoSave } from './services/AutoSaveHandler';
 import readOnlyCheck from './services/ReadOnlyChecker';
 import { UPDATE_MANAGER as UM } from './services/UpdateManager';
 import { Err } from './util/Err';
@@ -153,6 +153,11 @@ export const App = new class extends ContextNode {
       handleAutoSave(document);
     }, undefined, this.context.subscriptions);
 
+    // Register the auto-build listener
+    vscode.tasks.onDidStartTask(event => {
+      handleAutoBuild(event.execution.task);
+    }, undefined, this.context.subscriptions);
+
     // Initialize dependancies
     SM.init(this);
     UM.init(this);
@@ -189,11 +194,7 @@ export const App = new class extends ContextNode {
    * @lastreviewed null
    */
   private getPackageJson(): ExtensionPackageJson {
-    const extension = vscode.extensions.getExtension('bluestep-systems.bsjs-push-pull');
-    if (extension?.packageJSON) {
-      return extension.packageJSON as ExtensionPackageJson;
-    }
-    throw new Err.PackageJsonNotFoundError();
+    return this.context.extension.packageJSON as ExtensionPackageJson;
   }
 
   /**

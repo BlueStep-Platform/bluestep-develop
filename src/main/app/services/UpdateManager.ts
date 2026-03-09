@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import { ClientInfo, GithubRelease, UpdateInfo } from '../../../../types';
+import { FileExtensions, GitHubUrls, Http, SettingsKeys } from '../../resources/constants';
 import type { App } from '../App';
 import { ContextNode } from '../context/ContextNode';
-import { FileExtensions, GitHubUrls, Http, SettingsKeys } from '../../resources/constants';
+import { Err } from '../util/Err';
 import { FileSystem } from '../util/fs/FileSystem';
 import { PrivateKeys, TypedPersistable } from '../util/PseudoMaps';
 import { PrivateTypedPersistable } from '../util/PseudoMaps/TypedPrivatePersistable';
-import { Err } from '../util/Err';
 import { showReleaseNotesPanel } from '../util/ui/ReleaseNotesWebview';
 const fs = FileSystem.getInstance;
 /**
@@ -120,7 +120,9 @@ export const UPDATE_MANAGER = new class extends ContextNode {
    */
   private handleGitHubFetchError(error: unknown): never {
     if (error instanceof Error) {
-      if (error.name === 'AbortError') throw new Err.UpdateCheckTimeoutError();
+      if (error.name === 'AbortError') {
+        throw new Err.UpdateCheckTimeoutError();
+      }
       throw new Err.GraphQLFetchError(error.message);
     }
     throw new Err.DataParsingError(`Failed to parse GitHub API response: ${error}`);
@@ -267,7 +269,7 @@ export const UPDATE_MANAGER = new class extends ContextNode {
     const len = Math.max(aParts.length, bParts.length);
     for (let i = 0; i < len; i++) {
       const diff = (aParts[i] ?? 0) - (bParts[i] ?? 0);
-      if (diff !== 0) return diff;
+      if (diff !== 0) { return diff; }
     }
     return 0;
   }
@@ -425,7 +427,7 @@ export const UPDATE_MANAGER = new class extends ContextNode {
       return tempFilePath.fsPath;
 
     } catch (error) {
-      if (error instanceof Err.ExtensionDownloadError) throw error;
+      if (error instanceof Err.ExtensionDownloadError) { throw error; }
       throw new Err.ExtensionDownloadError(500);
     }
   }
