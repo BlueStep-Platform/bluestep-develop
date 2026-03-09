@@ -57,7 +57,15 @@ All settings are available under **B6P Push/Pull** in VS Code settings (`Ctrl+,`
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `autoSave.enabled` | boolean | `false` | When `true`, automatically pushes **and** snapshots the current B6P script every time a file is saved. Non-B6P files are silently ignored. |
+| `autoSave.trigger` | enum | `"never"` | Controls when the automatic push+snapshot is triggered. See values below. |
+
+**`autoSave.trigger` values:**
+
+| Value | Description |
+|-------|-------------|
+| `never` | Disable automatic push+snapshot (default) |
+| `onSave` | Automatically push and snapshot whenever a B6P file is saved |
+| `onBuild` | Automatically push and snapshot when a build task runs (Ctrl+Shift+B) |
 
 > **Tip:** Because auto-save suppresses the normal push/snapshot completion popups, you can safely enable this setting without being flooded by notifications.
 
