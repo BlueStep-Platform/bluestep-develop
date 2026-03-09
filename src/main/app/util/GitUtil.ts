@@ -16,7 +16,7 @@ export type GitResult = {
 /**
  * Runs `git pull` in the given directory.
  *
- * @param cwd Absolute path to the working directory (typically the `draft/` folder).
+ * @param cwd Absolute path to the working directory (the script root folder, e.g. `.../U######/<scriptName>`).
  * @returns The stdout and stderr from the git process.
  * @throws If git is not on PATH or the command exits with a non-zero code.
  * @lastreviewed null
