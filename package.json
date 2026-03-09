@@ -89,7 +89,7 @@
             "type": "string",
             "editPresentation": "multilineText",
             "description": "Override the version used for update checks in debug mode",
-            "default": "1.1.0"
+            "default": ""
           }
         }
       },
@@ -177,6 +177,17 @@
       {
         "command": "bluestep-develop.toggleDebug",
         "title": "B6P: Toggle Debug Mode"
+      },
+      {
+        "command": "bluestep-develop.triggerBuild",
+        "title": "B6P: Trigger Build (Auto-Save)"
+      }
+    ],
+    "keybindings": [
+      {
+        "key": "ctrl+shift+b",
+        "command": "bluestep-develop.triggerBuild",
+        "when": "bluestep-develop.autoSave.trigger == 'onBuild'"
       }
     ],
     "viewsContainers": {

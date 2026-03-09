@@ -6,7 +6,7 @@ import { SESSION_MANAGER as SM } from './b6p_session/SessionManager';
 import { ORG_CACHE as OC } from './cache/OrgCache';
 import { ContextNode } from './context/ContextNode';
 import ctrlPCommands from './ctrl-p-commands';
-import { handleAutoBuild, handleAutoSave } from './services/AutoSaveHandler';
+import { handleAutoBuild, handleAutoSave, handleBuildKeybinding } from './services/AutoSaveHandler';
 import readOnlyCheck from './services/ReadOnlyChecker';
 import { UPDATE_MANAGER as UM } from './services/UpdateManager';
 import { Err } from './util/Err';
@@ -64,7 +64,8 @@ export const App = new class extends ContextNode {
       })],
       ['bluestep-develop.openSettings', vscode.commands.registerCommand('bluestep-develop.openSettings', async () => {
         vscode.commands.executeCommand('workbench.action.openSettings', "@ext:bluestep-systems.bluestep-develop");
-      })]
+      })],
+      ['bluestep-develop.triggerBuild', vscode.commands.registerCommand('bluestep-develop.triggerBuild', handleBuildKeybinding)]
     ]);
     constructor() {}
     forEach(callback: (disposable: vscode.Disposable, key: string, map: this) => void) {

@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const _pkg = require("../../../../package.json") as { publisher: string; name: string };
 
 /**

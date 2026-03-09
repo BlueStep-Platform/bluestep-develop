@@ -234,6 +234,27 @@ export function handleAutoBuild(task: vscode.Task): void {
 }
 
 /**
+ * Handles the `bluestep-develop.triggerBuild` keybinding command.
+ *
+ * When `autoSave.trigger` is `'onBuild'`, this command is bound to
+ * `Ctrl+Shift+B` so that the extension intercepts the keystroke before VS Code
+ * opens the "Select the build task to run" picker.  It immediately triggers a
+ * push+snapshot for the currently active B6P document.
+ *
+ * If no editor is active the call is silently ignored.
+ *
+ * @lastreviewed null
+ */
+export function handleBuildKeybinding(): void {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+
+  triggerForDocument(activeEditor.document);
+}
+
+/**
  * Returns the current auto-save trigger setting.
  *
  * Convenience accessor used by tests and UI components.
