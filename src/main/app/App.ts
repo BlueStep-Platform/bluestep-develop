@@ -194,11 +194,7 @@ export const App = new class extends ContextNode {
    * @lastreviewed null
    */
   private getPackageJson(): ExtensionPackageJson {
-    const extension = vscode.extensions.getExtension('bluestep-systems.bsjs-push-pull');
-    if (extension?.packageJSON) {
-      return extension.packageJSON as ExtensionPackageJson;
-    }
-    throw new Err.PackageJsonNotFoundError();
+    return this.context.extension.packageJSON as ExtensionPackageJson;
   }
 
   /**
