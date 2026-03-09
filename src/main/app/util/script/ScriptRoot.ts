@@ -551,7 +551,7 @@ export class ScriptRoot {
         await transpiler.addFile(file);
       }
     }
-    const emittedEntries = await transpiler.transpile(this);
+    const emittedEntries = await transpiler.transpile();
     App.logger.info(`Transpiled ${emittedEntries.length} TypeScript files.`);
     App.logger.info(`Emitted Files: \n${emittedEntries.join("\n")}`);
     const emittedScriptNodes = emittedEntries.map(e => ScriptFactory.createNode(vscode.Uri.file(e), this));

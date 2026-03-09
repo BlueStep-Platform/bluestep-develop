@@ -24,7 +24,7 @@ const esbuildProblemMatcherPlugin = {
 };
 
 async function main() {
-	const ctx = await esbuild.context({
+	const mainCtx = await esbuild.context({
 		entryPoints: [
 			'src/extension.ts'
 		],
@@ -42,11 +42,28 @@ async function main() {
 			esbuildProblemMatcherPlugin,
 		],
 	});
+
+	// Worker bundle: includes the TypeScript compiler so it stays out of the main bundle
+	const workerCtx = await esbuild.context({
+		entryPoints: ['src/worker/transpiler-worker.ts'],
+		bundle: true,
+		format: 'cjs',
+		minify: production,
+		sourcemap: !production,
+		sourcesContent: false,
+		platform: 'node',
+		outfile: 'dist/transpiler-worker.js',
+		logLevel: 'silent',
+	});
+
 	if (watch) {
-		await ctx.watch();
+		await mainCtx.watch();
+		await workerCtx.watch();
 	} else {
-		await ctx.rebuild();
-		await ctx.dispose();
+		await mainCtx.rebuild();
+		await mainCtx.dispose();
+		await workerCtx.rebuild();
+		await workerCtx.dispose();
 	}
 }
 
