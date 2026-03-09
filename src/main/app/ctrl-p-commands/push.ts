@@ -13,12 +13,35 @@ import { Alert } from '../util/ui/Alert';
 import { ProgressHelper } from '../util/ui/ProgressHelper';
 
 /**
+ * Options for the {@link pushScript} function.
+ */
+interface PushScriptOptions {
+  overrideFormulaUrl?: string;
+  sourceOps?: SourceOps;
+  skipMessage?: boolean;
+  isSnapshot?: boolean;
+  scriptRoot?: ScriptRoot;
+  force?: boolean;
+  onlyChanged?: boolean;
+  /**
+   * When `true`, the remote cleanup step (which may show a modal confirmation
+   * prompt) is skipped entirely.  Use this for automated (non-interactive)
+   * pushes such as the auto-save feature.
+   */
+  skipCleanup?: boolean;
+}
+
+/**
  * Pushes a script to a WebDAV location.
  * @param overrideFormulaUri The URI to override the default formula URI.
- * @param sourceOps The options for oveerriding the source location
+ * @param sourceOps The options for overriding the source location
+ * @param skipCleanup When `true`, the remote cleanup step (which may show a
+ *   modal confirmation prompt) is skipped entirely.  Use this for automated
+ *   (non-interactive) pushes such as the auto-save feature.
  * @returns A promise that resolves when the push is complete.
+ * @lastreviewed null
  */
-export default async function ({ overrideFormulaUrl, sourceOps, skipMessage, isSnapshot, scriptRoot, force, onlyChanged }: { overrideFormulaUrl?: string, sourceOps?: SourceOps, skipMessage?: boolean, isSnapshot?: boolean, scriptRoot?: ScriptRoot, force?: boolean, onlyChanged?: boolean; }): Promise<void> {
+export default async function ({ overrideFormulaUrl, sourceOps, skipMessage, isSnapshot, scriptRoot, force, onlyChanged, skipCleanup }: PushScriptOptions): Promise<void> {
   try {
     let sr: ScriptRoot;
     const targetFormulaOverride = overrideFormulaUrl || await vscode.window.showInputBox({ prompt: 'Paste in the target formula URI' });
@@ -56,7 +79,9 @@ export default async function ({ overrideFormulaUrl, sourceOps, skipMessage, isS
       cleanupMessage: "Cleaning up the remote draft folder..."
     });
 
-    await cleanupUnusedRemotePaths(sr.getRootUri(), targetFormulaOverride, isSnapshot);
+    if (!skipCleanup) {
+      await cleanupUnusedRemotePaths(sr.getRootUri(), targetFormulaOverride, isSnapshot);
+    }
 
     if (!skipMessage) {
       !(App.settings.get("squelch").pushComplete) && Alert.popup(isSnapshot ? 'Snapshot complete!' : 'Push complete!');
