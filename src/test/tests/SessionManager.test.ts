@@ -78,7 +78,7 @@ import { HttpClient } from '../../main/app/util/network/HttpClient';
 //       logUri: vscode.Uri.file('/test/logs'),
 //       extensionMode: vscode.ExtensionMode.Test,
 //       extension: {
-//         id: 'bluestep-systems.bsjs-push-pull',
+//         id: 'bluestep-systems.bluestep-develop',
 //         extensionUri: vscode.Uri.file('/test/extension'),
 //         extensionPath: '/test/extension',
 //         isActive: true,

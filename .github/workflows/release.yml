@@ -231,7 +231,7 @@ jobs:
           npm run package-extension
 
           # Verify VSIX file was created
-          VSIX_COUNT=$(find . -maxdepth 1 -name "bsjs-push-pull-*.vsix" -type f | wc -l)
+          VSIX_COUNT=$(find . -maxdepth 1 -name "bluestep-develop-*.vsix" -type f | wc -l)
           if [ "$VSIX_COUNT" -eq 0 ]; then
             echo "::error::No VSIX file was created"
             exit 1
@@ -249,7 +249,7 @@ jobs:
           set -euo pipefail
 
           # Find the VSIX file
-          VSIX_FILE=$(find . -maxdepth 1 -name "bsjs-push-pull-*.vsix" -type f)
+          VSIX_FILE=$(find . -maxdepth 1 -name "bluestep-develop-*.vsix" -type f)
           echo "vsix-file=$(basename "$VSIX_FILE")" >> $GITHUB_OUTPUT
 
           # Generate SHA256 checksum

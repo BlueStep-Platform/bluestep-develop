@@ -8,8 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Auto-push trigger modes** – `bsjs-push-pull.autoSave.enabled` (boolean) has been replaced by
-  `bsjs-push-pull.autoSave.trigger` (enum: `never` | `onSave` | `onBuild`).  Select `onBuild` to
+- **Auto-push trigger modes** – `bluestep-develop.autoSave.enabled` (boolean) has been replaced by
+  `bluestep-develop.autoSave.trigger` (enum: `never` | `onSave` | `onBuild`).  Select `onBuild` to
   push and snapshot the active B6P file whenever a build task runs (Ctrl+Shift+B).
 
 ### Fixed
@@ -66,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2026.2.27]
 
 ### Added
-- **Auto-save push+snapshot** - New `bsjs-push-pull.autoSave.enabled` setting. When enabled, the
+- **Auto-save push+snapshot** - New `bluestep-develop.autoSave.enabled` setting. When enabled, the
   extension automatically performs a push followed by a snapshot whenever a B6P script file is
   saved. Non-B6P files are silently ignored. Push/snapshot messages are suppressed during
   auto-save to avoid notification spam.

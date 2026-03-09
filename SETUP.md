@@ -51,9 +51,9 @@ Or edit your `.vscode/settings.json` directly and add the JSON above.
 
 ## Extension Settings
 
-All settings are available under **B6P Push/Pull** in VS Code settings (`Ctrl+,` → search `bsjs-push-pull`).
+All settings are available under **B6P Push/Pull** in VS Code settings (`Ctrl+,` → search `bluestep-develop`).
 
-### Auto Save (`bsjs-push-pull.autoSave`)
+### Auto Save (`bluestep-develop.autoSave`)
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|

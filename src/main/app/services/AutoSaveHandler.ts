@@ -177,7 +177,7 @@ function triggerForDocument(document: vscode.TextDocument): void {
 }
 
 /**
- * Handles the auto-save feature.  When the `bsjs-push-pull.autoSave.trigger`
+ * Handles the auto-save feature.  When the `bluestep-develop.autoSave.trigger`
  * setting is `'onSave'`, a push and snapshot are triggered automatically every
  * time a B6P script file is saved.
  *
@@ -205,7 +205,7 @@ export function handleAutoSave(document: vscode.TextDocument): void {
 }
 
 /**
- * Handles the auto-build feature.  When the `bsjs-push-pull.autoSave.trigger`
+ * Handles the auto-build feature.  When the `bluestep-develop.autoSave.trigger`
  * setting is `'onBuild'`, a push and snapshot are triggered for the currently
  * active B6P document whenever a build-group task starts (e.g. Ctrl+Shift+B).
  *

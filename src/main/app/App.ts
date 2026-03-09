@@ -28,42 +28,42 @@ export const App = new class extends ContextNode {
   disposables = new class implements ReadOnlyMap<vscode.Disposable> {
 
     #map = new Map<string, vscode.Disposable>([
-      ['bsjs-push-pull.pushScript', vscode.commands.registerCommand('bsjs-push-pull.pushScript', ctrlPCommands.pushScript)],
-      ['bsjs-push-pull.pullScript', vscode.commands.registerCommand('bsjs-push-pull.pullScript', ctrlPCommands.pullScript)],
-      ['bsjs-push-pull.pullCurrent', vscode.commands.registerCommand('bsjs-push-pull.pullCurrent', ctrlPCommands.pullCurrent)],
-      ['bsjs-push-pull.pushCurrent', vscode.commands.registerCommand('bsjs-push-pull.pushCurrent', ctrlPCommands.pushCurrent)],
-      ['bsjs-push-pull.updateCredentials', vscode.commands.registerCommand('bsjs-push-pull.updateCredentials', ctrlPCommands.updateCredentials)],
-      ['bsjs-push-pull.runTask', vscode.commands.registerCommand('bsjs-push-pull.runTask', ctrlPCommands.runTask)],
-      ['bsjs-push-pull.checkForUpdates', vscode.commands.registerCommand('bsjs-push-pull.checkForUpdates', ctrlPCommands.checkForUpdates)],
-      ['bsjs-push-pull.notify', vscode.commands.registerCommand('bsjs-push-pull.notify', ctrlPCommands.notify)],
-      ['bsjs-push-pull.quickDeploy', vscode.commands.registerCommand('bsjs-push-pull.quickDeploy', ctrlPCommands.quickDeploy)],
-      ['bsjs-push-pull.testTask', vscode.commands.registerCommand('bsjs-push-pull.testTask', ctrlPCommands.testTask)],
-      ['bsjs-push-pull.snapshot', vscode.commands.registerCommand('bsjs-push-pull.snapshot', ctrlPCommands.snapshot)],
-      ['bsjs-push-pull.report', vscode.commands.registerCommand('bsjs-push-pull.report', async () => {
+      ['bluestep-develop.pushScript', vscode.commands.registerCommand('bluestep-develop.pushScript', ctrlPCommands.pushScript)],
+      ['bluestep-develop.pullScript', vscode.commands.registerCommand('bluestep-develop.pullScript', ctrlPCommands.pullScript)],
+      ['bluestep-develop.pullCurrent', vscode.commands.registerCommand('bluestep-develop.pullCurrent', ctrlPCommands.pullCurrent)],
+      ['bluestep-develop.pushCurrent', vscode.commands.registerCommand('bluestep-develop.pushCurrent', ctrlPCommands.pushCurrent)],
+      ['bluestep-develop.updateCredentials', vscode.commands.registerCommand('bluestep-develop.updateCredentials', ctrlPCommands.updateCredentials)],
+      ['bluestep-develop.runTask', vscode.commands.registerCommand('bluestep-develop.runTask', ctrlPCommands.runTask)],
+      ['bluestep-develop.checkForUpdates', vscode.commands.registerCommand('bluestep-develop.checkForUpdates', ctrlPCommands.checkForUpdates)],
+      ['bluestep-develop.notify', vscode.commands.registerCommand('bluestep-develop.notify', ctrlPCommands.notify)],
+      ['bluestep-develop.quickDeploy', vscode.commands.registerCommand('bluestep-develop.quickDeploy', ctrlPCommands.quickDeploy)],
+      ['bluestep-develop.testTask', vscode.commands.registerCommand('bluestep-develop.testTask', ctrlPCommands.testTask)],
+      ['bluestep-develop.snapshot', vscode.commands.registerCommand('bluestep-develop.snapshot', ctrlPCommands.snapshot)],
+      ['bluestep-develop.report', vscode.commands.registerCommand('bluestep-develop.report', async () => {
         //Alert.info("Settings: " + App.settings.toJSON(), { modal: false });
         Alert.info("NOT IMPLEMENTED YET");
       })],
-      ['bsjs-push-pull.clearSettings', vscode.commands.registerCommand('bsjs-push-pull.clearSettings', async () => {
+      ['bluestep-develop.clearSettings', vscode.commands.registerCommand('bluestep-develop.clearSettings', async () => {
         Alert.info("Reverting to default settings");
         App.clearMap();
       })],
-      ['bsjs-push-pull.clearSessions', vscode.commands.registerCommand('bsjs-push-pull.clearSessions', async () => {
+      ['bluestep-develop.clearSessions', vscode.commands.registerCommand('bluestep-develop.clearSessions', async () => {
         Alert.info("Clearing all Sessions");
         SM.clearMap();
         OC.clearCache();
       })],
-      ['bsjs-push-pull.clearAll', vscode.commands.registerCommand('bsjs-push-pull.clearAll', async () => {
+      ['bluestep-develop.clearAll', vscode.commands.registerCommand('bluestep-develop.clearAll', async () => {
         Alert.info("Clearing Sessions, Auth Managers, and Settings");
         App.clearMap(true);
         SM.clearMap();
         OC.clearCache();
         Auth.clearManagers();
       })],
-      ['bsjs-push-pull.toggleDebug', vscode.commands.registerCommand('bsjs-push-pull.toggleDebug', async () => {
+      ['bluestep-develop.toggleDebug', vscode.commands.registerCommand('bluestep-develop.toggleDebug', async () => {
         App.toggleDebugMode();
       })],
-      ['bsjs-push-pull.openSettings', vscode.commands.registerCommand('bsjs-push-pull.openSettings', async () => {
-        vscode.commands.executeCommand('workbench.action.openSettings', "@ext:bluestep-systems.bsjs-push-pull");
+      ['bluestep-develop.openSettings', vscode.commands.registerCommand('bluestep-develop.openSettings', async () => {
+        vscode.commands.executeCommand('workbench.action.openSettings', "@ext:bluestep-systems.bluestep-develop");
       })]
     ]);
     constructor() {}

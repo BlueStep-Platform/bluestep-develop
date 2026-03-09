@@ -83,7 +83,7 @@ import { MockFileSystem } from '../../main/app/util/fs/FileSystemProvider';
 //       logUri: vscode.Uri.file('/test/logs'),
 //       extensionMode: vscode.ExtensionMode.Test,
 //       extension: {
-//         id: 'bluestep-systems.bsjs-push-pull',
+//         id: 'bluestep-systems.bluestep-develop',
 //         extensionUri: vscode.Uri.file('/test/extension'),
 //         extensionPath: '/test/extension',
 //         isActive: true,
