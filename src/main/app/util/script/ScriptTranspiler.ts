@@ -1,12 +1,12 @@
 import ts from "typescript";
 import * as vscode from "vscode";
+import { FolderNames } from "../../../resources/constants";
 import { App } from "../../App";
 import { Err } from "../Err";
 import { FileSystem } from "../fs/FileSystem";
 import { ScriptFactory } from "./ScriptFactory";
 import type { ScriptNode } from "./ScriptNode";
 import type { ScriptRoot } from "./ScriptRoot";
-import { FolderNames } from "../../../resources/constants";
 const fs = FileSystem.getInstance;
 
 /**
@@ -69,13 +69,16 @@ export class ScriptTranspiler {
 
     const tsconfigTextArray = await fs().readFile(tsConfigFile.uri());
     const pseudoParsedConfig = ts.parseConfigFileTextToJson(tsConfigFile.path(), Buffer.from(tsconfigTextArray).toString('utf-8'));
-    pseudoParsedConfig.config.compilerOptions.rootDir = tsConfigFile.folder().path();
     if (pseudoParsedConfig.error) {
       const message = ts.flattenDiagnosticMessageText(pseudoParsedConfig.error.messageText, '\n');
       throw new Err.CompilationError(`Error parsing tsconfig.json at ${tsConfigFile.path()}: ${message}`);
     }
-    // Parse the configuration but ignore file discovery errors
-    // We'll handle file discovery ourselves since we're working with specific files
+    // Parse the configuration but ignore file discovery errors.
+    // We provide files explicitly to ts.createProgram, so file discovery via include/exclude is not needed.
+    // rootDir is intentionally NOT overridden here so that the tsconfig.json's own rootDir setting
+    // (or TypeScript's inference from the provided files) is respected. Overriding rootDir caused
+    // compiled output to appear in incorrect subdirectories when the tsconfig specified a rootDir
+    // different from its containing folder.
     const parsedConfig = ts.parseJsonConfigFileContent(
       pseudoParsedConfig.config,
       {
@@ -87,10 +90,9 @@ export class ScriptTranspiler {
       undefined,
       tsConfigFile.path()
     );
-    App.logger.info("Using tsconfig.json compiler options from:", tsConfigFile.path);
+    App.logger.info("Using tsconfig.json compiler options from:", tsConfigFile.path());
     // Ensure listEmittedFiles is always enabled so we can track emitted files
     parsedConfig.options.listEmittedFiles = true;
-    // Ensure output files are overwritten if they already exist
     return parsedConfig.options;
   }
 

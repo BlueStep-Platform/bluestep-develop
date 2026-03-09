@@ -272,7 +272,7 @@ import { ScriptFactory } from '../../main/app/util/script/ScriptFactory';
 //       assert.strictEqual(scriptRoot.origin, 'configbeh.bluestep.net', 'ScriptRoot should parse origin correctly');
 //     });
 
-//     test('should handle DownstairsUriParser integration', async () => {
+//     test('should handle LocalUriParser integration', async () => {
 //       const testUri = vscode.Uri.file('/test/workspace/configbeh.bluestep.net/1466960/draft/parser-test.js');
 //       const scriptFile = ScriptFactory.createFile(testUri);
 

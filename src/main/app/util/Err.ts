@@ -358,11 +358,11 @@ export namespace Err {
   }
 
   /**
-   * Error thrown when file type cannot be converted to upstairs URL.
+   * Error thrown when file type cannot be converted to remote URL.
    */
   export class InvalidFileTypeForUrlError extends ScriptOperationError {
     constructor(fileType: string) {
-      super(`Unexpected type: \`${fileType}\`, cannot convert to upstairs URL`);
+      super(`Unexpected type: \`${fileType}\`, cannot convert to remote URL`);
       this.name = "InvalidFileTypeForUrlError";
     }
   }
@@ -392,7 +392,7 @@ export namespace Err {
    */
   export class FileIntegrityError extends ScriptOperationError {
     constructor() {
-      super("Downloaded file hash does not match upstairs hash, disk corruption detected");
+      super("Downloaded file hash does not match remote hash, disk corruption detected");
       this.name = "FileIntegrityError";
     }
   }
@@ -402,7 +402,7 @@ export namespace Err {
    */
   export class EtagParsingError extends ScriptOperationError {
     constructor(etag: string) {
-      super(`Could not parse upstairs etag; \`${etag}\`, cannot verify integrity`);
+      super(`Could not parse remote etag; \`${etag}\`, cannot verify integrity`);
       this.name = "EtagParsingError";
     }
   }
@@ -565,9 +565,11 @@ export namespace Err {
    * Error thrown when GitHub API returns an error status.
    */
   export class GitHubApiError extends Error {
+    public readonly statusCode: number;
     constructor(status: number) {
       super(`GitHub API returned status ${status}`);
       this.name = "GitHubApiError";
+      this.statusCode = status;
     }
   }
 
@@ -662,7 +664,7 @@ export namespace Err {
    */
   export class CleanupParametersError extends Error {
     constructor() {
-      super("Both downstairsRootFolderUri and upstairsRootUrlString are required for cleanup");
+      super("Both localRootFolderUri and remoteRootUrlString are required for cleanup");
       this.name = "CleanupParametersError";
     }
   }

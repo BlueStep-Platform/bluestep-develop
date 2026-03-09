@@ -7,6 +7,7 @@ import { FileSystem } from '../util/fs/FileSystem';
 import { PrivateKeys, TypedPersistable } from '../util/PseudoMaps';
 import { PrivateTypedPersistable } from '../util/PseudoMaps/TypedPrivatePersistable';
 import { Err } from '../util/Err';
+import { showReleaseNotesPanel } from '../util/ui/ReleaseNotesWebview';
 const fs = FileSystem.getInstance;
 /**
  * Singleton update checker for the BlueStep VS Code extension.
@@ -17,8 +18,17 @@ export const UPDATE_MANAGER = new class extends ContextNode {
   private readonly LAST_CHECKED_KEY = 'lastChecked';
   private readonly UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-  private readonly REPO_OWNER: string = 'bluestep-systems';
-  private readonly REPO_NAME: string = 'vscode-extension';
+  /**
+   * Derives the GitHub API base URL for this extension's repository
+   * directly from the repository URL in package.json.
+   * e.g. "https://github.com/BlueStep-Platform/bluestep-develop"
+   *   -> "https://api.github.com/repos/BlueStep-Platform/bluestep-develop"
+   * @lastreviewed null
+   */
+  private get repoApiBase(): string {
+    return this.parent.getRepositoryUrl()
+      .replace(`${GitHubUrls.BASE}/`, `${GitHubUrls.API_BASE}${GitHubUrls.REPOS_PATH}`);
+  }
 
   /**
    * The ancestor context node that is used to instantiate this manager
@@ -47,9 +57,6 @@ export const UPDATE_MANAGER = new class extends ContextNode {
     setTimeout(async () => {
       try {
         this.parent.logger.info("B6P: Starting automatic update check...");
-        // Check for version change and show setup guide if needed
-        //this.showSetupGuide();
-        this.getVersionNotes(version);
         await this.checkForUpdatesIfNeeded();
       } catch (error) {
         this.parent.logger.error("B6P: Update check failed: " + (error instanceof Error ? error.stack : error));
@@ -60,63 +67,6 @@ export const UPDATE_MANAGER = new class extends ContextNode {
     return this;
   }
 
-  /**
-   * //TODO
-   * Checks if the extension version has changed (install or update) and shows setup guide
-   * @param currentVersion The current version of the extension
-   * @lastreviewed null
-   */
-  private getVersionNotes(currentVersion: string): void {
-    const storedVersion = this.state.get('version');
-    this.parent.logger.info(`B6P: Stored version: ${storedVersion}, Current version is ${currentVersion}`);
-    //TODO implement release notes display
-
-    // // Check if this is a fresh install or an update
-    // if (storedVersion !== currentVersion) {
-    //   const isNewInstall = storedVersion === currentVersion; // Default value matches current means first run
-    //   const message = isNewInstall
-    //     ? 'Welcome to BlueStep JavaScript Push/Pull!'
-    //     : `BlueStep extension updated to v${currentVersion}`;
-
-    //   this.parent.logger.info(`B6P: Version change detected (${storedVersion} -> ${currentVersion})`);
-    //   
-    //   this.parent.logger.info(message);
-    // }
-  }
-
-  /**
-   * Opens the SETUP.md file in the editor
-   * @param message Optional message to show in a notification
-   * @lastreviewed null
-   */
-  //@ts-ignore
-  private async showSetupGuide(message?: string): Promise<void> {
-    try {
-      if (this.state.get('setupShown')) {
-        return; // Already shown
-      }
-      // Get the extension's installation path
-      const extensionPath = this.context.extensionUri;
-      const setupFilePath = vscode.Uri.joinPath(extensionPath, 'SETUP.md');
-
-      // Open the setup guide
-      const document = await vscode.workspace.openTextDocument(setupFilePath);
-      await vscode.window.showTextDocument(document, {
-        preview: false,
-        viewColumn: vscode.ViewColumn.One
-      });
-
-      // Show optional notification
-      if (message) {
-        vscode.window.showInformationMessage(message);
-      }
-      this.state.set('setupShown', true);
-      await this.state.store();
-    } catch (error) {
-      this.parent.logger.error(`B6P: Failed to open setup guide: ${error instanceof Error ? error.message : error}`);
-      // Don't throw - this is a nice-to-have feature
-    }
-  }
 
 
   public get parent(): typeof App {
@@ -152,17 +102,28 @@ export const UPDATE_MANAGER = new class extends ContextNode {
   }
 
   /**
-   * Get GitHub authentication headers if token is available
+   * Get GitHub authentication headers if token is available.
    * @returns Headers object with authentication if configured
-   * @lastreviewed 2025-10-15
+   * @lastreviewed null
    */
-  private async getGitHubHeaders(): Promise<Record<string, string>> {
-    const headers: Record<string, string> = {
+  private getGitHubHeaders(): Record<string, string> {
+    return {
       [Http.Headers.USER_AGENT]: Http.Headers.USER_AGENT_B6P,
       [Http.Headers.ACCEPT]: Http.Headers.GITHUB_API_ACCEPT
     };
+  }
 
-    return headers;
+  /**
+   * Converts an unknown GitHub fetch error into the appropriate typed error and throws it.
+   * Centralises the duplicated error handling across all GitHub API calls.
+   * @lastreviewed null
+   */
+  private handleGitHubFetchError(error: unknown): never {
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') throw new Err.UpdateCheckTimeoutError();
+      throw new Err.GraphQLFetchError(error.message);
+    }
+    throw new Err.DataParsingError(`Failed to parse GitHub API response: ${error}`);
   }
 
   /**
@@ -189,7 +150,7 @@ export const UPDATE_MANAGER = new class extends ContextNode {
       await this.checkForUpdates();
       this.state.set(this.LAST_CHECKED_KEY, now);
     } catch (error) {
-      console.error('Error checking for updates:', error);
+      this.parent.logger.error('B6P: Error checking for updates: ' + (error instanceof Error ? error.stack : error));
     }
   }
 
@@ -207,7 +168,7 @@ export const UPDATE_MANAGER = new class extends ContextNode {
         return null;
       }
 
-      const latestVersion = latestRelease.tag_name.replace(/^v/, ''); // Remove 'v' prefix if present
+      const latestVersion = this.parseVersionParts(latestRelease.tag_name).join('.');
 
       if (this.isNewerVersion(latestVersion, currentVersion)) {
         const updateInfo: UpdateInfo = {
@@ -223,7 +184,7 @@ export const UPDATE_MANAGER = new class extends ContextNode {
 
       return null;
     } catch (error) {
-      console.error('Error checking for updates:', error);
+      this.parent.logger.error('B6P: Error checking for updates: ' + (error instanceof Error ? error.stack : error));
       throw error;
     }
   }
@@ -245,46 +206,38 @@ export const UPDATE_MANAGER = new class extends ContextNode {
   }
 
   /**
+   * Performs a GET request against the GitHub API, parses the JSON response as `T`,
+   * and maps any network/parse errors to the appropriate typed errors.
+   * @param nullStatuses HTTP status codes that should resolve to `null` instead of throwing.
+   * @lastreviewed null
+   */
+  private async githubFetch<T>(url: string, nullStatuses: number[] = []): Promise<T | null> {
+    try {
+      const response = await fetch(url, {
+        method: Http.Methods.GET,
+        headers: this.getGitHubHeaders(),
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (nullStatuses.includes(response.status)) { return null; }
+      if (!response.ok) { throw new Err.GitHubApiError(response.status); }
+      return await response.json() as T;
+    } catch (error) {
+      this.handleGitHubFetchError(error);
+    }
+  }
+
+  /**
    * Get the latest release from GitHub API
    * @returns The latest non-draft, non-prerelease GitHub release or null if none found
    * @lastreviewed 2025-10-15
    */
   private async getLatestRelease(): Promise<GithubRelease | null> {
-    try {
-      const url = `${GitHubUrls.API_BASE}${GitHubUrls.REPOS_PATH}${this.REPO_OWNER}/${this.REPO_NAME}${GitHubUrls.RELEASES_LATEST_PATH}`;
-
-      const response = await fetch(url, {
-        method: Http.Methods.GET,
-        headers: await this.getGitHubHeaders(),
-        signal: AbortSignal.timeout(10_000) // 10 second timeout
-      });
-
-      if (response.status === 404) {
-        // No releases found
-        return null;
-      }
-
-      if (!response.ok) {
-        throw new Err.GitHubApiError(response.status);
-      }
-
-      const release = await response.json() as GithubRelease;
-
-      // Filter out drafts and pre-releases by default
-      if (release.draft || release.prerelease) {
-        return null;
-      }
-
-      return release;
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          throw new Err.UpdateCheckTimeoutError();
-        }
-        throw new Err.GraphQLFetchError(error.message);
-      }
-      throw new Err.DataParsingError(`Failed to parse GitHub API response: ${error}`);
-    }
+    const release = await this.githubFetch<GithubRelease>(
+      `${this.repoApiBase}${GitHubUrls.RELEASES_LATEST_PATH}`,
+      [404]
+    );
+    if (!release || release.draft || release.prerelease) { return null; }
+    return release;
   }
 
   /**
@@ -294,32 +247,33 @@ export const UPDATE_MANAGER = new class extends ContextNode {
    * @returns True if newVersion is newer than currentVersion
    * @lastreviewed 2025-10-15
    */
+  /**
+   * Parses a version string (with optional leading 'v') into an array of numeric parts.
+   * e.g. "v1.2.3" or "1.2.3" → [1, 2, 3]
+   * @lastreviewed null
+   */
+  private parseVersionParts(version: string): number[] {
+    return version.replace(/^v/, '').split('.').map(n => parseInt(n, 10));
+  }
+
+  /**
+   * Compares two version strings. Returns a positive number if `a` is newer,
+   * negative if `a` is older, and 0 if they are equal.
+   * @lastreviewed null
+   */
+  private compareVersions(a: string, b: string): number {
+    const aParts = this.parseVersionParts(a);
+    const bParts = this.parseVersionParts(b);
+    const len = Math.max(aParts.length, bParts.length);
+    for (let i = 0; i < len; i++) {
+      const diff = (aParts[i] ?? 0) - (bParts[i] ?? 0);
+      if (diff !== 0) return diff;
+    }
+    return 0;
+  }
+
   private isNewerVersion(newVersion: string, currentVersion: string): boolean {
-    const parseVersion = (version: string) => {
-      return version.split('.').map(num => parseInt(num, 10));
-    };
-
-    const newParts = parseVersion(newVersion);
-    const currentParts = parseVersion(currentVersion);
-
-    // Ensure both arrays have the same length
-    const maxLength = Math.max(newParts.length, currentParts.length);
-    while (newParts.length < maxLength) {
-      newParts.push(0);
-    }
-    while (currentParts.length < maxLength) {
-      currentParts.push(0);
-    }
-
-    for (let i = 0; i < maxLength; i++) {
-      if (newParts[i] > currentParts[i]) {
-        return true;
-      } else if (newParts[i] < currentParts[i]) {
-        return false;
-      }
-    }
-
-    return false; // Versions are equal
+    return this.compareVersions(newVersion, currentVersion) > 0;
   }
 
   /**
@@ -336,7 +290,7 @@ export const UPDATE_MANAGER = new class extends ContextNode {
     }
 
     // Fallback to release page
-    return `${GitHubUrls.BASE}/${this.REPO_OWNER}/${this.REPO_NAME}/releases/tag/${release.tag_name}`;
+    return `${this.parent.getRepositoryUrl()}/releases/tag/${release.tag_name}`;
   }
 
   /**
@@ -367,7 +321,7 @@ export const UPDATE_MANAGER = new class extends ContextNode {
         await this.autoInstallUpdate(updateInfo);
         break;
       case Actions.VIEW_NOTES:
-        await this.showReleaseNotes(updateInfo);
+        showReleaseNotesPanel(updateInfo);
         break;
       case Actions.DISABLE:
         await this.disableUpdateChecking();
@@ -421,7 +375,7 @@ export const UPDATE_MANAGER = new class extends ContextNode {
       }
 
     } catch (error) {
-      console.error('Auto-install failed:', error);
+      this.parent.logger.error('B6P: Auto-install failed: ' + (error instanceof Error ? error.stack : error));
       vscode.window.showErrorMessage(
         `Failed to auto-install extension: ${error instanceof Error ? error.message : error}. Please download and install manually.`
       );
@@ -471,7 +425,8 @@ export const UPDATE_MANAGER = new class extends ContextNode {
       return tempFilePath.fsPath;
 
     } catch (error) {
-      throw new Err.ExtensionDownloadError(500); // Generic download error
+      if (error instanceof Err.ExtensionDownloadError) throw error;
+      throw new Err.ExtensionDownloadError(500);
     }
   }
 
@@ -497,90 +452,9 @@ export const UPDATE_MANAGER = new class extends ContextNode {
     try {
       await vscode.env.openExternal(vscode.Uri.parse(url));
     } catch (error) {
-      console.error('Failed to open download URL:', error);
+      this.parent.logger.error('B6P: Failed to open download URL: ' + (error instanceof Error ? error.stack : error));
       vscode.window.showErrorMessage('Failed to open download URL. Please visit the GitHub releases page manually.');
     }
-  }
-
-  /**
-   * Show release notes in a webview panel
-   * @param updateInfo Information about the update including release notes
-   * @lastreviewed 2025-10-15
-   */
-  private async showReleaseNotes(updateInfo: UpdateInfo): Promise<void> {
-    const panel = vscode.window.createWebviewPanel(
-      'b6pReleaseNotes',
-      `B6P Release Notes v${updateInfo.version}`,
-      vscode.ViewColumn.One,
-      {}
-    );
-
-    panel.webview.html = this.getReleaseNotesHtml(updateInfo);
-  }
-
-  /**
-   * Generate HTML for release notes webview
-   * @param updateInfo Information about the update including release notes
-   * @returns HTML string for the webview
-   * @lastreviewed null
-   */
-  private getReleaseNotesHtml(updateInfo: UpdateInfo): string {
-    const releaseNotes = updateInfo.releaseNotes
-      .replace(/\n/g, '<br>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-    return `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Release Notes</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: var(--vscode-editor-foreground);
-            background-color: var(--vscode-editor-background);
-            padding: 20px;
-          }
-          h1 {
-            color: var(--vscode-textPreformat-foreground);
-            border-bottom: 1px solid var(--vscode-panel-border);
-            padding-bottom: 10px;
-          }
-          .meta {
-            color: var(--vscode-descriptionForeground);
-            font-size: 0.9em;
-            margin-bottom: 20px;
-          }
-          .download-link {
-            background-color: var(--vscode-button-background);
-            color: var(--vscode-button-foreground);
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 3px;
-            display: inline-block;
-            margin-top: 20px;
-          }
-          .download-link:hover {
-            background-color: var(--vscode-button-hoverBackground);
-          }
-        </style>
-      </head>
-      <body>
-        <h1>B6P Extension v${updateInfo.version}</h1>
-        <div class="meta">
-          Released: ${new Date(updateInfo.publishedAt).toLocaleDateString()}
-        </div>
-        <div class="content">
-          ${releaseNotes || 'No release notes available.'}
-        </div>
-        <a href="${updateInfo.downloadUrl}" class="download-link">Download Update</a>
-      </body>
-      </html>
-    `;
   }
 
   /**
@@ -591,14 +465,13 @@ export const UPDATE_MANAGER = new class extends ContextNode {
     const curUpdateSettings = this.parent.settings.get('updateCheck');
     this.parent.settings.set('updateCheck', { ...curUpdateSettings, ...{ enabled: false } });
 
-    vscode.window.showInformationMessage(
+    const selection = await vscode.window.showInformationMessage(
       'Automatic update checking has been disabled. You can re-enable it in the extension settings.',
       'Open Settings'
-    ).then(selection => {
-      if (selection === 'Open Settings') {
-        vscode.commands.executeCommand('workbench.action.openSettings', `${this.parent.appKey}.updateCheck`);
-      }
-    });
+    );
+    if (selection === 'Open Settings') {
+      await vscode.commands.executeCommand('workbench.action.openSettings', `${this.parent.appKey}.updateCheck`);
+    }
   }
 
   /**
@@ -608,37 +481,7 @@ export const UPDATE_MANAGER = new class extends ContextNode {
    * @lastreviewed null
    */
   public async getAllReleases(includePrerelease = false): Promise<GithubRelease[]> {
-    try {
-      const response = await fetch(`${GitHubUrls.API_BASE}${GitHubUrls.REPOS_PATH}${this.REPO_OWNER}/${this.REPO_NAME}${GitHubUrls.RELEASES_PATH}`, {
-        method: Http.Methods.GET,
-        headers: await this.getGitHubHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Err.GitHubApiError(response.status);
-      }
-
-      const releases = await response.json() as GithubRelease[];
-
-      const filteredReleases = releases.filter(release => {
-        if (release.draft) {
-          return false;
-        }
-        if (!includePrerelease && release.prerelease) {
-          return false;
-        }
-        return true;
-      });
-
-      return filteredReleases;
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          throw new Err.UpdateCheckTimeoutError();
-        }
-        throw new Err.GraphQLFetchError(error.message);
-      }
-      throw new Err.DataParsingError(`Failed to parse GitHub API response: ${error}`);
-    }
+    const releases = await this.githubFetch<GithubRelease[]>(`${this.repoApiBase}${GitHubUrls.RELEASES_PATH}`) ?? [];
+    return releases.filter(r => !r.draft && (includePrerelease || !r.prerelease));
   }
 }();

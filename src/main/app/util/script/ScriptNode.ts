@@ -1,11 +1,13 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { Util } from '../';
 import { ConfigJsonContent as ConfigDotJsonContent, MetaDataDotJsonContent } from '../../../../../types';
 import { FolderNames, Http, SpecialFiles } from '../../../resources/constants';
+import { App } from '../../App';
 import { SESSION_MANAGER as SM } from '../../b6p_session/SessionManager';
-import { DownstairsUriParser } from '../data/DownstairsUrIParser';
 import { GlobMatcher } from '../data/GlobMatcher';
-import { Util } from '../';
+import { LocalUriParser } from '../data/LocalUriParser';
+import { ScriptUrlParser } from '../data/ScriptUrlParser';
 import { Err } from '../Err';
 import { FileSystem } from '../fs/FileSystem';
 import { ResponseCodes } from '../network/StatusCodes';
@@ -14,8 +16,6 @@ import { ScriptFactory } from './ScriptFactory';
 import { ScriptFolder } from './ScriptFolder';
 import { ScriptRoot } from './ScriptRoot';
 import { TsConfig } from './TsConfig';
-import { App } from '../../App';
-import { ScriptUrlParser } from '../data/ScriptUrlParser';
 const fs = FileSystem.getInstance;
 
 /**
@@ -26,12 +26,12 @@ const fs = FileSystem.getInstance;
 export abstract class ScriptNode implements ScriptPathElement {
 
   /**
-   * The parser for the downstairs URI of this file.
+   * The parser for the local URI of this file.
    */
-  protected parser: DownstairsUriParser;
+  protected parser: LocalUriParser;
 
   /**
-   * The downstairs root object.
+   * The local root object.
    */
   protected scriptRoot: ScriptRoot;
 
@@ -43,28 +43,28 @@ export abstract class ScriptNode implements ScriptPathElement {
   /**
    * Creates a {@link ScriptNode} instance in addition to its associated {@link ScriptRoot} object.
    * 
-   * @param param0 Object containing the downstairs URI (local file system path)
-   * @param param0.downstairsUri The local file system URI for this script file
+   * @param param0 Object containing the local URI (local file system path)
+   * @param param0.localUri The local file system URI for this script file
    * @lastreviewed 2025-09-15
    */
-  constructor(public readonly downstairsUri: vscode.Uri, scriptRoot?: ScriptRoot) {
-    this.parser = new DownstairsUriParser(downstairsUri);
-    this.scriptRoot = scriptRoot || new ScriptRoot(downstairsUri);
+  constructor(public readonly localUri: vscode.Uri, scriptRoot?: ScriptRoot) {
+    this.parser = new LocalUriParser(localUri);
+    this.scriptRoot = scriptRoot || new ScriptRoot(localUri);
   }
 
   /**
-   * Meant to convert the current node to a matching upstairs {@link URL}.
+   * Meant to convert the current node to a matching remote {@link URL}.
    * @lastreviewed 2025-09-29
    */
-  abstract upstairsUrl(): Promise<URL>;
+  abstract remoteUrl(): Promise<URL>;
 
   /**
-   * Creates a familial node with the given downstairs {@link vscode.Uri} after verifying that it indeed has a familial relation.
+   * Creates a familial node with the given local {@link vscode.Uri} after verifying that it indeed has a familial relation.
    */
-  abstract createFamilial(downstairsUri: vscode.Uri): ScriptNode;
+  abstract createFamilial(localUri: vscode.Uri): ScriptNode;
 
   /**
-   * Gets the downstairs (local) {@link vscode.Uri} for this file
+   * Gets the local (local) {@link vscode.Uri} for this file
    * @lastreviewed 2025-09-29
    */
   public uri() {
@@ -81,12 +81,12 @@ export abstract class ScriptNode implements ScriptPathElement {
   }
 
   /**
-   * Produces the last modified {@link Date} of the upstairs object
+   * Produces the last modified {@link Date} of the remote object
    * @lastreviewed 2025-09-29
    */
-  public async getUpstairsLastModified(): Promise<Date> {
+  public async getRemoteLastModified(): Promise<Date> {
 
-    const response = await SM.fetch(await this.upstairsUrl(), {
+    const response = await SM.fetch(await this.remoteUrl(), {
       method: Http.Methods.HEAD
     });
     const lastModifiedHeaderValue = response.headers.get("Last-Modified");
@@ -98,19 +98,19 @@ export abstract class ScriptNode implements ScriptPathElement {
 
 
   /**
-   * Gets the content of the upstairs file as text.
-   * @throws an {@link Err.HttpResponseError} When the upstairs file returns a 400+ status code
+   * Gets the content of the remote file as text.
+   * @throws an {@link Err.HttpResponseError} When the remote file returns a 400+ status code
    * @lastreviewed 2025-09-15
    */
-  public async getUpstairsContent(): Promise<string> {
-    const response = await SM.fetch(await this.upstairsUrl(), {
+  public async getRemoteContent(): Promise<string> {
+    const response = await SM.fetch(await this.remoteUrl(), {
       method: Http.Methods.GET,
       headers: {
         [Http.Headers.ACCEPT]: Http.Headers.ACCEPT_ALL,
       }
     });
     if (response.status >= ResponseCodes.BAD_REQUEST) {
-      throw new Err.HttpResponseError(`Error fetching upstairs file. Status: ${response.status}.\n ${response.statusText}`);
+      throw new Err.HttpResponseError(`Error fetching remote file. Status: ${response.status}.\n ${response.statusText}`);
     }
     return await response.text();
   }
@@ -188,7 +188,7 @@ export abstract class ScriptNode implements ScriptPathElement {
     if (!md) {
       return null;
     }
-    return md.pushPullRecords.find(record => record.downstairsPath === this.uri().fsPath)?.lastPulled || null;
+    return md.pushPullRecords.find(record => record.localPath === this.uri().fsPath)?.lastPulled || null;
   }
 
   /**
@@ -214,7 +214,7 @@ export abstract class ScriptNode implements ScriptPathElement {
     if (!md) {
       return null;
     }
-    return md.pushPullRecords.find(record => record.downstairsPath === this.uri().fsPath)?.lastPushed || null;
+    return md.pushPullRecords.find(record => record.localPath === this.uri().fsPath)?.lastPushed || null;
   }
 
   /**
@@ -255,7 +255,7 @@ export abstract class ScriptNode implements ScriptPathElement {
    * @returns The updated script file
    * @lastreviewed 2025-09-15
    */
-  withParser(parser: DownstairsUriParser): ScriptNode {
+  withParser(parser: LocalUriParser): ScriptNode {
     this.parser = parser;
     return this;
   }
@@ -379,11 +379,11 @@ export abstract class ScriptNode implements ScriptPathElement {
   }
 
   /**
-   * Gets the URL pathname for the upstairs file.
+   * Gets the URL pathname for the remote file.
    * @lastreviewed 2025-09-15
    */
   public async getRest(): Promise<string> {
-    return (await this.upstairsUrl()).pathname;
+    return (await this.remoteUrl()).pathname;
   }
 
 
@@ -477,23 +477,38 @@ export abstract class ScriptNode implements ScriptPathElement {
   }
 
   /**
-   * Attempts to upload the current node to its upstairs location.
-   * If an upstairs URL override string is provided, it will be used instead of the default upstairs location.
+   * Attempts to upload the current node to its remote location.
+   * If an remote URL override string is provided, it will be used instead of the default remote location.
    * 
-   * @param upstairsUrlOverrideString An optional upstairs URL override string
+   * @param remoteUrlOverrideString An optional remote URL override string
    * @returns A {@link Response} object if the upload was successful, or `void` if no upload was necessary
-   * @throws an {@link Err.FileSendError} when there is an error sending the file to the upstairs location
-   * @throws an {@link Err.DestinationPathError} When the upstairs URL (or override) is invalid
+   * @throws an {@link Err.FileSendError} when there is an error sending the file to the remote location
+   * @throws an {@link Err.DestinationPathError} When the remote URL (or override) is invalid
    * @throws an {@link Err.UserCancelledError} When the user cancels the upload due to some issue that required user intervention
    * @lastreviewed 2025-10-01
    */
-  abstract upload(arg?: { upstairsUrlOverrideString?: string, isSnapshot?: boolean; }): Promise<Response | void>;
+  abstract upload(arg?: { remoteUrlOverrideString?: string, isSnapshot?: boolean, force?: boolean; }): Promise<Response | void>;
 
   /**
-   * Downloads the upstairs node and writes it to the local file system.
+   * Downloads the remote node and writes it to the local file system.
    * @returns A {@link Response} object if the download was successful
    */
   abstract download(): Promise<Response>;
+
+  /**
+   * Returns whether the local file content has changed since it was last pushed to remote.
+   *
+   * The base-class implementation conservatively returns `true` (always push) for node types
+   * that do not track per-file hashes (e.g. {@link ScriptFolder}).  {@link ScriptFile} overrides
+   * this with an actual SHA-512 comparison against the `lastVerifiedHash` stored in metadata.
+   *
+   * A return value of `true` means "the file should be (re-)pushed".
+   * A return value of `false` means "the file is unchanged and can safely be skipped".
+   * @lastreviewed null
+   */
+  public async hasLocallyChangedSinceLastPush(): Promise<boolean> {
+    return true;
+  }
 
   /**
    * @returns Whether the current node is a folder
@@ -518,7 +533,7 @@ export abstract class ScriptNode implements ScriptPathElement {
     return !(await this.isFolder());
   }
 
-  abstract getReasonToNotPush(arg?: { upstairsOverride?: URL; }): Promise<string | null>;
+  abstract getReasonToNotPush(arg?: { remoteOverride?: URL; }): Promise<string | null>;
 
   /**
    * Copies the current draft file to its respective build folder.

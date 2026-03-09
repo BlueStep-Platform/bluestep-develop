@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import { Util } from '..';
-import { ScriptMetaData } from '../../../../../types';
+import { ScriptMetaData, ScriptPackageJson } from '../../../../../types';
 import { FileExtensions, FolderNames, SpecialFiles } from '../../../resources/constants';
 import { App } from '../../App';
 import { ORG_CACHE as OC } from '../../cache/OrgCache';
 import pushCurrent from '../../ctrl-p-commands/pushCurrent';
-import { DownstairsUriParser } from '../data/DownstairsUrIParser';
+import { LocalUriParser } from '../data/LocalUriParser';
 import { OrgWorker } from '../data/OrgWorker';
 import { ScriptUrlParser } from '../data/ScriptUrlParser';
 import { Err } from '../Err';
@@ -30,19 +30,19 @@ export class ScriptRoot {
   public static readonly GITIGNORE_FILENAME = SpecialFiles.GITIGNORE;
   private _orgWorker: OrgWorker | null;
   public readonly rootUri: vscode.Uri;
-  private parser: DownstairsUriParser;
+  private parser: LocalUriParser;
   private scriptParser: ScriptUrlParser | null;
   /**
    * Creates a script root utilizing any of the children in said script.
    * 
-   * The objective here is to use literally any file within the script's downstairs
+   * The objective here is to use literally any file within the script's local
    * folder to extrapolate the root of the script.
    * 
-   * @param childUri Any file within the downstairs root folder
+   * @param childUri Any file within the local root folder
    * @lastreviewed 2025-09-15
    */
   constructor(public readonly uri: vscode.Uri) {
-    this.parser = new DownstairsUriParser(uri);
+    this.parser = new LocalUriParser(uri);
     const shavedName = this.parser.getShavedName();
     this.rootUri = vscode.Uri.joinPath(vscode.Uri.file(shavedName), "/");
     this._orgWorker = null;
@@ -65,8 +65,8 @@ export class ScriptRoot {
    * @lastreviewed 2025-09-15
    */
   private getMetadataFileUri() {
-    const downstairsRoot = this.getRootUri();
-    return vscode.Uri.joinPath(downstairsRoot, ScriptRoot.METADATA_FILENAME);
+    const localRoot = this.getRootUri();
+    return vscode.Uri.joinPath(localRoot, ScriptRoot.METADATA_FILENAME);
   }
 
   /**
@@ -74,8 +74,8 @@ export class ScriptRoot {
    * @lastreviewed 2025-09-15
    */
   private getGitIgnoreFileUri() {
-    const downstairsRoot = this.getRootUri();
-    return vscode.Uri.joinPath(downstairsRoot, SpecialFiles.GITIGNORE);
+    const localRoot = this.getRootUri();
+    return vscode.Uri.joinPath(localRoot, SpecialFiles.GITIGNORE);
   }
 
   /**
@@ -273,7 +273,7 @@ export class ScriptRoot {
   }
 
   /**
-   * Gets the {@link vscode.Uri} for the downstairs root folder.
+   * Gets the {@link vscode.Uri} for the local root folder.
    * @lastreviewed 2025-09-15
    */
   public getRootUri() {
@@ -281,7 +281,7 @@ export class ScriptRoot {
   }
 
   /**
-   * Gets the {@link vscode.Uri Uri} for the downstairs U folder.
+   * Gets the {@link vscode.Uri Uri} for the local U folder.
    *
    * @lastreviewed 2025-10-09
    */
@@ -309,7 +309,7 @@ export class ScriptRoot {
    * Gets the script key from 
    * - the script parser (if available)
    * - the metadata file (if available)
-   * - by instantiating a script parser from the upstairs URL (if a webdavId is available)
+   * - by instantiating a script parser from the remote URL (if a webdavId is available)
    */
   async getScriptKey() {
     if (this.scriptParser !== null) {
@@ -325,7 +325,7 @@ export class ScriptRoot {
     }
     try {
       // this will fail if there is no webdavId.
-      this.scriptParser = new ScriptUrlParser((await this.toScriptBaseUpstairsUrl()).toString());
+      this.scriptParser = new ScriptUrlParser((await this.toScriptbaseRemoteUrl()).toString());
       const key = await this.scriptParser.getScriptBaseKey();
       await this.modifyMetaData(meta => {
         meta.scriptKey = key;
@@ -366,7 +366,7 @@ export class ScriptRoot {
    * Returns a base URL string suitable for pull and push operations to the appropriate org.
    * @lastreviewed 2025-09-15
    */
-  public async toScriptBaseUpstairsString() {
+  public async toScriptBaseRemoteString() {
     const origin = await this.anyOrigin();
     const webdavId = await this.getWebdavId();
     return `${origin.toString()}files/${webdavId}/`;
@@ -376,8 +376,8 @@ export class ScriptRoot {
    * Returns a base {@link URL} suitable for pull and push operations.
    * @lastreviewed 2025-09-15
    */
-  public async toScriptBaseUpstairsUrl(): Promise<URL> {
-    const urlString = await this.toScriptBaseUpstairsString();
+  public async toScriptbaseRemoteUrl(): Promise<URL> {
+    const urlString = await this.toScriptBaseRemoteString();
     return new URL(urlString);
   }
 
@@ -484,7 +484,7 @@ export class ScriptRoot {
 
   /**
    * Checks if this {@link ScriptRoot} is morally equivalent to another {@link ScriptRoot}.
-   * Compares origin, WebDAV ID, downstairs root path, and upstairs URL.
+   * Compares origin, WebDAV ID, local root path, and remote URL.
    * 
    * @param b The other ScriptRoot to compare against
    * @lastreviewed 2025-09-15
@@ -570,7 +570,7 @@ export class ScriptRoot {
     const draftFiles = (await draftFolder.flattenRaw()).map(uri => uri.fsPath);
     await this.modifyMetaData((meta) => {
       meta.pushPullRecords = meta.pushPullRecords.filter(record => {
-        return draftFiles.includes(record.downstairsPath);
+        return draftFiles.includes(record.localPath);
       });
     });
   }
@@ -581,6 +581,47 @@ export class ScriptRoot {
    */
   public getDraftFolder() {
     return ScriptFactory.createFolder(vscode.Uri.joinPath(this.rootUri, FolderNames.DRAFT), this);
+  }
+
+  /**
+   * Attempts to read and parse `draft/package.json`.
+   * Returns `null` if the file does not exist or cannot be parsed.
+   * @lastreviewed null
+   */
+  public async getDraftPackageJson(): Promise<ScriptPackageJson | null> {
+    const packageJsonUri = vscode.Uri.joinPath(this.getDraftFolder().uri(), SpecialFiles.PACKAGE_JSON);
+    try {
+      const bytes = await fs().readFile(packageJsonUri);
+      const text = Buffer.from(bytes).toString('utf-8');
+      return JSON.parse(text) as ScriptPackageJson;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Returns the git repository URL declared in `draft/package.json`, or `null` if:
+   * - the file does not exist,
+   * - it cannot be parsed, or
+   * - it has no `repository` field.
+   *
+   * Handles both the string shorthand (`"repository": "https://..."`) and the object form
+   * (`"repository": { "url": "https://..." }`).
+   * @lastreviewed null
+   */
+  public async getDraftGitRepository(): Promise<string | null> {
+    const pkg = await this.getDraftPackageJson();
+    if (!pkg) {
+      return null;
+    }
+    const repo = pkg.repository;
+    if (!repo) {
+      return null;
+    }
+    if (typeof repo === 'string') {
+      return repo;
+    }
+    return repo.url ?? null;
   }
 
   /**
@@ -640,26 +681,47 @@ export class ScriptRoot {
    * 
    * @lastreviewed 2025-10-01
    */
-  public async getPushableNodes(snapshot: boolean = false): Promise<ScriptNode[]> {
+  /**
+   * Gets all draft folder nodes that are eligible for pushing.
+   *
+   * @param snapshot When `true`, build-folder contents are included (snapshot pushes include compiled output).
+   * @param onlyChanged When `true`, files whose local hash matches their last-pushed `lastVerifiedHash` are
+   *   silently skipped.  This avoids redundant network requests for unchanged files and is the right default
+   *   for automated operations such as auto-save.  Manual pushes leave this `false` so that every file is
+   *   always (re-)sent, regardless of local-change state.
+   * @lastreviewed null
+   */
+  public async getPushableNodes(snapshot: boolean = false, onlyChanged: boolean = false): Promise<ScriptNode[]> {
     const flattenedDraft = await this.getDraftFolder().flatten();
+
+    // Run all per-file async checks in parallel across every file at once,
+    // rather than sequentially awaiting each one inside a loop.
+    const results = await Promise.all(
+      flattenedDraft.map(async f => {
+        const reason = await f.getReasonToNotPush();
+        // Only check build-folder membership when needed (not a snapshot, and no other exclusion reason).
+        const isInBuild = (!reason && !snapshot) ? await f.isInItsRespectiveBuildFolder() : false;
+        // Only perform the (purely local) hash check when the caller has opted in.
+        const hasChanged = (!reason && !isInBuild && onlyChanged) ? await f.hasLocallyChangedSinceLastPush() : true;
+        return { f, reason, isInBuild, hasChanged };
+      })
+    );
+
     const pushableNodes: ScriptNode[] = [];
-    for (const f of flattenedDraft) {
-      const reason = await f.getReasonToNotPush();
+    for (const { f, reason, isInBuild, hasChanged } of results) {
       if (reason) {
         App.logger.info(`Excluding draft file from push: ${f.path()} (${reason})`);
         continue;
       }
-      // reasoning: if it's a snapshot, we push every "standard" file.
-      // if it's not a snapshot push, we exclude anything in a build folder
-      // and we exclude anything that has a reason to not push (like being the root folder, etc).
-      const isSnapshotOrNotInBuild = snapshot || !(await f.isInItsRespectiveBuildFolder());
-
-      const fileName = f.path();
-      if (isSnapshotOrNotInBuild) {
-        pushableNodes.push(f);
-      } else {
-        App.logger.info(`Excluding file in build folder from push: ${fileName}`);
+      if (isInBuild) {
+        App.logger.info(`Excluding file in build folder from push: ${f.path()}`);
+        continue;
       }
+      if (!hasChanged) {
+        App.logger.info(`Skipping unchanged local file: ${f.path()}`);
+        continue;
+      }
+      pushableNodes.push(f);
     }
 
     return pushableNodes;

@@ -14,33 +14,33 @@ import { TsConfig } from './TsConfig';
  */
 export class ScriptFolder extends ScriptNode {
 
-  public createFamilial(downstairsUri: vscode.Uri): ScriptFolder {
-    if (!this.scriptRoot.getAsFolder().contains(downstairsUri)) {
+  public createFamilial(localUri: vscode.Uri): ScriptFolder {
+    if (!this.scriptRoot.getAsFolder().contains(localUri)) {
       throw new Err.ScriptOperationError("The provided URI is not a sibling within the same script root.");
     }
-    return new ScriptFolder(downstairsUri, this.scriptRoot);
+    return new ScriptFolder(localUri, this.scriptRoot);
   }
 
   /**
    * The upload method is not implemented for {@link ScriptFolder} since individual files
-   * automatically create parent folders upstairs, so this really should only be called when
+   * automatically create parent folders on remote, so this really should only be called when
    * the folder is empty. We are not going to bother uploading empty folders right now, so this is a no-op
    * as of this time.
    * @lastreviewed 2025-10-01
-   * @param _upstairsUrlOverrideString NOT USED
+   * @param _remoteUrlOverrideString NOT USED
    */
-  public async upload(_arg?: { upstairsUrlOverrideString?: string, isSnapshot?: boolean; }): Promise<Response | void> {
+  public async upload(_arg?: { remoteUrlOverrideString?: string, isSnapshot?: boolean, force?: boolean; }): Promise<Response | void> {
     App.logger.info(`ScriptFolder.upload() called on ${this.path()}; no action taken.`);
     return;
   }
 
-  async getReasonToNotPush(_arg?: { upstairsOverride?: URL, isSnapshot?: boolean; }): Promise<string | null> {
+  async getReasonToNotPush(_arg?: { remoteOverride?: URL, isSnapshot?: boolean; }): Promise<string | null> {
     return `Node (${this.path()}) is a folder`;
   }
 
   /**
    * The download method is required to be implemented for {@link ScriptFolder} since individual files
-   * automatically create their (real) downstairs parent folders, so this really should only be called when
+   * automatically create their (real) local parent folders, so this really should only be called when
    * the folder is empty. We are not going to bother downloading empty folders right now, so this is a no-op
    * as of this time.
    * @lastreviewed 2025-10-01
@@ -146,7 +146,7 @@ export class ScriptFolder extends ScriptNode {
    * @throws an {@link Err.MethodNotImplementedError} 
    * @lastreviewed 2025-09-29
    */
-  public currentIntegrityMatches(_ops?: { upstairsOverride?: URL; }): Promise<boolean> {
+  public currentIntegrityMatches(_ops?: { remoteOverride?: URL; }): Promise<boolean> {
     throw new Err.MethodNotImplementedError();
   }
 
@@ -155,7 +155,7 @@ export class ScriptFolder extends ScriptNode {
    * @throws an {@link Err.MethodNotImplementedError} 
    * @lastreviewed 2025-09-29
    */
-  upstairsUrl(): Promise<URL> {
+  remoteUrl(): Promise<URL> {
     throw new Err.MethodNotImplementedError();
   }
 

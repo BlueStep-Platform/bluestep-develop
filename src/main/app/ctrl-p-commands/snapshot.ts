@@ -15,7 +15,7 @@ export default async function snapshot({ overrideFormulaUri, sourceOps }: { over
       App.logger.info("Snapshot command called with no arguments, assuming current context");
     }
     // "contextual" meaning currently open or determined from sourceOps
-    const contextualUri = await Util.getDownstairsFileUri(sourceOps);
+    const contextualUri = await Util.getLocalFileUri(sourceOps);
     App.logger.info("Contextual URI determined to be:", contextualUri?.toString() ?? "undefined");
     const sf = ScriptFactory.createFile(contextualUri);
     sf.getScriptRoot().snapshot();

@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { CryptoAlgorithms, FileExtensions, FolderNames, Http, MimeTypes, SpecialFiles } from '../../../resources/constants';
 import { App } from "../../App";
 import { SESSION_MANAGER as SM } from '../../b6p_session/SessionManager';
@@ -9,7 +10,6 @@ import { ResponseCodes } from "../network/StatusCodes";
 import { Alert } from '../ui/Alert';
 import { ScriptNode } from "./ScriptNode";
 import { TsConfig } from './TsConfig';
-import { Uri } from 'vscode';
 const fs = FileSystem.getInstance;
 
 /**
@@ -33,11 +33,11 @@ export class ScriptFile extends ScriptNode {
    */
   private static WeakEtagPattern = /^W\/"[a-f0-9]{128}"$/;
 
-  public createFamilial(downstairsUri: Uri): ScriptFile {
-    if (!this.scriptRoot.getAsFolder().contains(downstairsUri)) {
+  public createFamilial(localUri: Uri): ScriptFile {
+    if (!this.scriptRoot.getAsFolder().contains(localUri)) {
       throw new Err.ScriptOperationError("The provided URI is not a proper sibling within the same script root.");
     }
-    return new ScriptFile(downstairsUri, this.scriptRoot);
+    return new ScriptFile(localUri, this.scriptRoot);
   }
 
   /**
@@ -66,17 +66,17 @@ export class ScriptFile extends ScriptNode {
   }
 
   /**
-   * Gets the hash of the upstairs file, or `null` if it doesn't exist.
+   * Gets the hash of the remote file, or `null` if it doesn't exist.
    * Extracts SHA-512 hash from the ETag header, handling both standard and weak ETags.
    * Complex ETags (from memory documents) are not supported and return null.
    * 
-   * @param ops.required If true, throws an error when upstairs hash cannot be determined
-   * @param ops.upstairsOverride Optional override URL to check instead of the default upstairs URL
+   * @param ops.required If true, throws an error when remote hash cannot be determined
+   * @param ops.remoteOverride Optional override URL to check instead of the default remote URL
    * @returns The SHA-512 hash string in lowercase, or `null` if file doesn't exist or has complex ETag
    * @lastreviewed 2025-09-15
    */
-  public async getUpstairsHash(ops?: { required?: boolean, upstairsOverride?: URL; }): Promise<string | null> {
-    const response = await SM.fetch(ops?.upstairsOverride || await this.upstairsUrl(), {
+  public async getRemoteHash(ops?: { required?: boolean, remoteOverride?: URL; }): Promise<string | null> {
+    const response = await SM.fetch(ops?.remoteOverride || await this.remoteUrl(), {
       method: Http.Methods.HEAD
     });
     const etagHeader = response.headers.get(Http.Headers.ETAG);
@@ -97,10 +97,32 @@ export class ScriptFile extends ScriptNode {
         throw new Err.HashCalculationError();
       }
       //TODO determine if there is a legitimate reason that this could be undefined and we should throw an error instead
-      // otherwise we can only assume it just doesn't exist upstairs
+      // otherwise we can only assume it just doesn't exist on remote
       return null;
     }
     return etag.toLowerCase();
+  }
+
+  /**
+   * Returns whether the local file content has changed since it was last pushed to remote.
+   *
+   * Computes the current SHA-512 hash of the local file and compares it against the
+   * `lastVerifiedHash` stored in `pushPullRecords` by {@link touch}.  No network call is
+   * needed — the comparison is entirely local.
+   *
+   * Returns `true` (push required) when:
+   * - the file has never been pushed (no metadata record exists), or
+   * - the current hash differs from `lastVerifiedHash`.
+   * @lastreviewed null
+   */
+  public override async hasLocallyChangedSinceLastPush(): Promise<boolean> {
+    const lastVerifiedHash = await this.getLastVerifiedHash();
+    if (!lastVerifiedHash) {
+      // No record means never pushed — must push.
+      return true;
+    }
+    const currentHash = await this.getHash();
+    return currentHash !== lastVerifiedHash;
   }
 
   /**
@@ -112,45 +134,45 @@ export class ScriptFile extends ScriptNode {
     if (!md) {
       return null;
     }
-    const record = md.pushPullRecords.find(record => record.downstairsPath === this.uri().fsPath);
+    const record = md.pushPullRecords.find(record => record.localPath === this.uri().fsPath);
     return record ? record.lastVerifiedHash : null;
   }
 
 
   /**
-   * Checks if the local file's integrity matches the upstairs file.
+   * Checks if the local file's integrity matches the remote file.
    * Compares SHA-512 hashes between local and remote versions.
    * 
-   * @param ops.upstairsOverride Optional override {@link URL} to check against instead of the default upstairs {@link URL}
+   * @param ops.remoteOverride Optional override {@link URL} to check against instead of the default remote {@link URL}
    * @lastreviewed 2025-09-15
    */
-  public async currentIntegrityMatches(ops?: { upstairsOverride?: URL; }): Promise<boolean> {
+  public async currentIntegrityMatches(ops?: { remoteOverride?: URL; }): Promise<boolean> {
     const localHash = await this.getHash();
-    const upstairsHash = await this.getUpstairsHash(ops);
-    const matches = localHash === upstairsHash;
-    App.isDebugMode() && console.log("filename:", this.name(), "\n", "matches:", matches, "\n", "local:", localHash, "\n", "upstairs:", upstairsHash);
+    const remoteHash = await this.getRemoteHash(ops);
+    const matches = localHash === remoteHash;
+    App.isDebugMode() && console.log("filename:", this.name(), "\n", "matches:", matches, "\n", "local:", localHash, "\n", "remote:", remoteHash);
     return matches;
   }
 
   /**
-   * Checks if the last verified hash from metadata matches the upstairs file's hash; this is to allow us to check
-   * if the upstairs file was changed since the last time we touched it.
-   * @param ops Optional override {@link URL} to check against instead of the default upstairs {@link URL}
+   * Checks if the last verified hash from metadata matches the remote file's hash; this is to allow us to check
+   * if the remote file was changed since the last time we touched it.
+   * @param ops Optional override {@link URL} to check against instead of the default remote {@link URL}
    * @returns Whether the old integrity matches
    */
-  public async oldIntegrityMatches(ops?: { upstairsOverride?: URL; }): Promise<boolean> {
+  public async oldIntegrityMatches(ops?: { remoteOverride?: URL; }): Promise<boolean> {
     const lastHash = await this.getLastVerifiedHash();
     if (!lastHash) {
       return false;
     }
-    const upstairsHash = await this.getUpstairsHash(ops);
-    const matches = lastHash === upstairsHash;
-    App.isDebugMode() && console.log("filename:", this.name(), "\n", "matches:", matches, "\n", "local:", lastHash, "\n", "upstairs:", upstairsHash);
+    const remoteHash = await this.getRemoteHash(ops);
+    const matches = lastHash === remoteHash;
+    App.isDebugMode() && console.log("filename:", this.name(), "\n", "matches:", matches, "\n", "local:", lastHash, "\n", "remote:", remoteHash);
     return matches;
   }
 
   /**
-   * Downloads the file from the upstairs location and writes it to the local file system.
+   * Downloads the file from the remote location and writes it to the local file system.
    * Performs integrity verification using ETag headers and updates the lastPulled timestamp.
    * Skips download if the file is in .gitignore and removes it from metadata instead.
    * 
@@ -167,7 +189,7 @@ export class ScriptFile extends ScriptNode {
       await this.deleteFromMetadata();
       return new Response("", { status: ResponseCodes.TEAPOT });
     }
-    const lookupUri = await this.upstairsUrl(parser);
+    const lookupUri = await this.remoteUrl(parser);
     App.logger.info("downloading from:" + lookupUri);
     const response = await SM.fetch(lookupUri, {
       method: Http.Methods.GET,
@@ -216,7 +238,7 @@ export class ScriptFile extends ScriptNode {
   */
   private async deleteFromMetadata() {
     await this.getScriptRoot().modifyMetaData((md) => {
-      const index = md.pushPullRecords.findIndex(record => record.downstairsPath === this.uri().fsPath);
+      const index = md.pushPullRecords.findIndex(record => record.localPath === this.uri().fsPath);
       if (index !== -1) {
         md.pushPullRecords.splice(index, 1);
       }
@@ -233,32 +255,32 @@ export class ScriptFile extends ScriptNode {
   }
 
   /**
-   * Gets the file name from the downstairs URI.
+   * Gets the file name from the local URI.
    * @lastreviewed 2025-10-01
    */
   public name(): string {
     return path.parse(this.uri().fsPath).base;
   }
   /**
-   * Returns the {@link URL} for the proper upstairs file.
+   * Returns the {@link URL} for the proper remote file.
    * Constructs the appropriate WebDAV {@link URL} based on the file type (root, metadata, declarations, or draft).
    * @lastreviewed 2025-10-01
    */
-  public async upstairsUrl(parser?: ScriptUrlParser): Promise<URL> {
+  public async remoteUrl(parser?: ScriptUrlParser): Promise<URL> {
 
-    const upstairsBaseUrl = await this.getScriptRoot(parser).toScriptBaseUpstairsUrl();
-    App.isDebugMode() && console.log("base upstairs URL:", upstairsBaseUrl.toString());
-    const newUrl = new URL(upstairsBaseUrl);
+    const remoteBaseUrl = await this.getScriptRoot(parser).toScriptbaseRemoteUrl();
+    App.isDebugMode() && console.log("base remote URL:", remoteBaseUrl.toString());
+    const newUrl = new URL(remoteBaseUrl);
     if (this.parser.type === "root") {
       return newUrl;
     } else if (this.parser.type === "metadata") {
       const fileName = this.name();
       if (fileName === SpecialFiles.B6P_METADATA) {
-        throw new Err.MetadataFileOperationError("convert to upstairs URL");
+        throw new Err.MetadataFileOperationError("convert to remote URL");
       }
-      newUrl.pathname = upstairsBaseUrl.pathname + fileName;
+      newUrl.pathname = remoteBaseUrl.pathname + fileName;
     } else if (this.parser.isInDefinedFolders()) {
-      newUrl.pathname = upstairsBaseUrl.pathname + this.parser.type + "/" + this.parser.rest;
+      newUrl.pathname = remoteBaseUrl.pathname + this.parser.type + "/" + this.parser.rest;
     } else {
       throw new Err.InvalidFileTypeForUrlError(this.parser.type);
     }
@@ -266,15 +288,15 @@ export class ScriptFile extends ScriptNode {
     return newUrl;
   }
   /**
-   * Determines a reason to not push this file upstairs.
+   * Determines a reason to not push this file to remote.
    * Checks various conditions including metadata files, declarations, external models, 
    * .gitignore patterns, info/objects folders, and integrity matching.
    * 
-   * @param ops.upstairsOverride Optional override URL to check against instead of the default upstairs URL
+   * @param ops.remoteOverride Optional override URL to check against instead of the default remote URL
    * @returns Empty string if the file can be pushed, otherwise a descriptive reason why not
    * @lastreviewed 2025-09-15
    */
-  public async getReasonToNotPush(ops?: { upstairsOverride?: URL }): Promise<string | null> {
+  public async getReasonToNotPush(ops?: { remoteOverride?: URL }): Promise<string | null> {
     if (this._reasonToNotPush !== undefined) {
       return this._reasonToNotPush;
     }
@@ -285,7 +307,7 @@ export class ScriptFile extends ScriptNode {
    * Sets the reason to not push this file (so it can be cached)
    * and returns it.
    */
-  private async setReasonToNotPush(ops?: { upstairsOverride?: URL }): Promise<string | null> {
+  private async setReasonToNotPush(ops?: { remoteOverride?: URL }): Promise<string | null> {
     if (this.parser.type === "root") {
       this._reasonToNotPush = "Node is the root folder";
     } else if (this.name() === SpecialFiles.B6P_METADATA) {
@@ -340,23 +362,24 @@ export class ScriptFile extends ScriptNode {
     return !this.isTypescript();
   }
 
-  async upload(arg?: { upstairsUrlOverrideString?: string, isSnapshot?: boolean; }): Promise<Response | void> {
+  async upload(arg?: { remoteUrlOverrideString?: string, isSnapshot?: boolean, force?: boolean; }): Promise<Response | void> {
     if (await this.isFolder()) {
       //TODO remove this when we are confident it isn't needed anymore
       throw new Err.ScriptOperationError("somehow a folder got created to upload with this method. ");
     }
     App.logger.info("Preparing to send file:", this.uri().fsPath);
-    App.logger.info("To target formula URI:", arg?.upstairsUrlOverrideString);
-    const upstairsOverride = new URL(arg?.upstairsUrlOverrideString || this.upstairsUrl().toString());
-    const thisUpstairs = await this.upstairsUrl();
-    upstairsOverride.pathname = thisUpstairs.pathname;
+    App.logger.info("To target formula URI:", arg?.remoteUrlOverrideString);
+    const thisRemote = await this.remoteUrl();
+    const remoteOverride = new URL(arg?.remoteUrlOverrideString || thisRemote.toString());
+    remoteOverride.pathname = thisRemote.pathname;
     // we skip snapshots/builds because when they go to be uploaded
     // they will always have been freshly created.
-    if (!this.isInSnapshot() && !(await this.isInItsRespectiveBuildFolder()) && !(await this.oldIntegrityMatches())) {
+    // we also skip the integrity check when force is true (e.g. auto-save).
+    if (!arg?.force && !this.isInSnapshot() && !(await this.isInItsRespectiveBuildFolder()) && !(await this.oldIntegrityMatches())) {
       const OVERWRITE = 'Overwrite';
       const CANCEL = 'Cancel';
       const overwrite = await Alert.prompt(
-        `The upstairs file (${upstairsOverride}) has changed since the last time you pushed or pulled. Do you wish to overwrite it?`,
+        `The remote file (${remoteOverride}) has changed since the last time you pushed or pulled. Do you wish to overwrite it?`,
         [
           OVERWRITE,
           CANCEL
@@ -364,16 +387,16 @@ export class ScriptFile extends ScriptNode {
       );
       if (overwrite !== OVERWRITE) {
         await Alert.popup((arg?.isSnapshot ? "Snapshot" : "Push") + " cancelled by user.");
-        throw new Err.UserCancelledError(`User ${overwrite ? overwrite + "ed" : "cancelled"} push due to upstairs file change`);
+        throw new Err.UserCancelledError(`User ${overwrite ? overwrite + "ed" : "cancelled"} push due to remote file change`);
       }
     }
-    const reason = await this.getReasonToNotPush({ upstairsOverride });
+    const reason = await this.getReasonToNotPush({ remoteOverride });
 
     if (reason) {
       App.logger.info(`${reason}; not pushing file:`, this.uri().fsPath);
       return;
     }
-    App.logger.info("Destination:", upstairsOverride.toString());
+    App.logger.info("Destination:", remoteOverride.toString());
 
     //TODO investigate if this can be done via streaming
     const fileContents = await fs().readFile(this.uri());
@@ -384,7 +407,7 @@ export class ScriptFile extends ScriptNode {
       },
       body: fileContents
     };
-    let resp = await SM.fetch(upstairsOverride, requestOptions);
+    let resp = await SM.fetch(remoteOverride, requestOptions);
     if (!resp.ok) {
       const details = await getDetails(resp);
       throw new Err.FileSendError(details);
@@ -394,7 +417,7 @@ export class ScriptFile extends ScriptNode {
       if (this.parser.type !== FolderNames.DRAFT) {
         throw new Err.ScriptOperationError("This should never happen, this is here as a safetycheck and should be removed when we're confident.");
       }
-      const snapshotOverride = new URL(upstairsOverride);
+      const snapshotOverride = new URL(remoteOverride);
       snapshotOverride.pathname = snapshotOverride.pathname.replace(new RegExp(FolderNames.DRAFT), FolderNames.SNAPSHOT);
 
       resp = await SM.fetch(snapshotOverride, requestOptions);
@@ -434,19 +457,19 @@ export class ScriptFile extends ScriptNode {
  * Gets the content of the local file as UTF-8 text.
  * @lastreviewed 2025-09-15
  */
-  public async getDownstairsContent(): Promise<string> {
+  public async getLocalContent(): Promise<string> {
     await this.requireExists();
-    const downstairsUri = this.uri();
+    const localUri = this.uri();
     try {
-      const fileData = await fs().readFile(downstairsUri);
+      const fileData = await fs().readFile(localUri);
       return Buffer.from(fileData).toString('utf8');
     } catch (e) {
       if (e instanceof Error || typeof e === 'string') {
         App.logger.error(e);
       } else {
-        App.logger.error(`Error reading downstairs file: ${e}`);
+        App.logger.error(`Error reading local file: ${e}`);
       }
-      throw new Err.FileReadError(`Error reading downstairs file: ${e}`);
+      throw new Err.FileReadError(`Error reading local file: ${e}`);
     }
   }
 
@@ -462,8 +485,8 @@ export class ScriptFile extends ScriptNode {
     await this.requireExists();
     const lastHash = await this.getHash();
     const metaData = await this.getScriptRoot().modifyMetaData(md => {
-      const downstairsPath = this.uri().fsPath;
-      const existingEntryIndex = md.pushPullRecords.findIndex(entry => entry.downstairsPath === downstairsPath);
+      const localPath = this.uri().fsPath;
+      const existingEntryIndex = md.pushPullRecords.findIndex(entry => entry.localPath === localPath);
       if (existingEntryIndex !== -1) {
         const newDateString = new Date().toUTCString();
 
@@ -473,7 +496,7 @@ export class ScriptFile extends ScriptNode {
 
         const now = new Date().toUTCString();
         md.pushPullRecords.push({
-          downstairsPath,
+          localPath,
           lastPushed: touchType === "lastPushed" ? now : null,
           lastPulled: touchType === "lastPulled" ? now : null,
           lastVerifiedHash: lastHash

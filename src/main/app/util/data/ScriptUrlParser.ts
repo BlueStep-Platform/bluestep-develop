@@ -6,8 +6,8 @@ import { Err } from "../Err";
 import { Alert } from "../ui/Alert";
 import { OrgWorker } from "./OrgWorker";
 
-type GetScriptRet = { upstairsPath: string; downstairsPath: string; trailing?: string; }[] | null;
-type RawFiles = { upstairsPath: string; downstairsPath: string; trailing?: string; }[];
+type GetScriptRet = { remotePath: string; localPath: string; trailing?: string; }[] | null;
+type RawFiles = { remotePath: string; localPath: string; trailing?: string; }[];
 export class ScriptUrlParser {
 
   /**
@@ -261,17 +261,17 @@ export class ScriptUrlParser {
         .map(async parser => {
           const { trailing, rawUrlString } = parser;
           const newPath = `${scriptName}/${trailing}`;
-          return { upstairsPath: rawUrlString, downstairsPath: newPath, trailing };
+          return { remotePath: rawUrlString, localPath: newPath, trailing };
         }));
 
       for (const rawFile of firstLayer) {
-        if (repository.find(rf => rf.upstairsPath === rawFile.upstairsPath)) {
+        if (repository.find(rf => rf.remotePath === rawFile.remotePath)) {
           // Prevent duplicates
           continue;
         }
         if (rawFile.trailing?.endsWith('/')) {
           // This is a directory; recurse into it
-          const subUrl = new URL(rawFile.upstairsPath);
+          const subUrl = new URL(rawFile.remotePath);
 
           if (subUrl.toString() === url.toString()) {
             repository.push(rawFile);

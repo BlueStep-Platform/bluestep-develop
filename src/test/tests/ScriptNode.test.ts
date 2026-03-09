@@ -85,13 +85,13 @@ suite('ScriptNode Tests', () => {
   });
 
   suite('URI Operations', () => {
-    test('should convert to downstairs URI correctly', () => {
+    test('should convert to local URI correctly', () => {
       const expectedPath = path.join('/test/workspace/U100001/1466960', 'draft', 'test.js');
-      const downstairsUri = scriptNode.uri();
+      const localUri = scriptNode.uri();
 
       // Normalize paths for cross-platform compatibility
       assert.strictEqual(
-        path.normalize(downstairsUri.fsPath),
+        path.normalize(localUri.fsPath),
         path.normalize(expectedPath)
       );
     });
@@ -372,7 +372,7 @@ suite('ScriptNode Tests', () => {
         scriptName: 'Test',
         webdavId: '1466960',
         pushPullRecords: [{
-          downstairsPath: scriptNode.uri().fsPath,
+          localPath: scriptNode.uri().fsPath,
           lastPulled: '2023-01-01T12:00:00.000Z',
           lastPushed: null,
           lastVerifiedHash: 'abcd1234'
@@ -399,7 +399,7 @@ suite('ScriptNode Tests', () => {
         scriptName: 'Test',
         webdavId: '1466960',
         pushPullRecords: [{
-          downstairsPath: scriptNode.uri().fsPath,
+          localPath: scriptNode.uri().fsPath,
           lastPulled: null,
           lastPushed: '2023-01-02T15:30:00.000Z',
           lastVerifiedHash: 'abcd1234'
@@ -603,7 +603,7 @@ suite('ScriptNode Tests', () => {
         scriptName: 'Concurrent Test',
         webdavId: '1466960',
         pushPullRecords: [{
-          downstairsPath: scriptNode.uri().fsPath,
+          localPath: scriptNode.uri().fsPath,
           lastPulled: '2023-01-01T12:00:00.000Z',
           lastPushed: null,
           lastVerifiedHash: 'abcd1234'
@@ -795,7 +795,7 @@ suite('ScriptNode Tests', () => {
         scriptName: 'Extreme Timestamp Test',
         webdavId: '1466960',
         pushPullRecords: [{
-          downstairsPath: scriptNode.uri().fsPath,
+          localPath: scriptNode.uri().fsPath,
           lastPulled: '1970-01-01T00:00:00.000Z', // Unix epoch
           lastPushed: '2038-01-19T03:14:07.000Z',  // Year 2038 problem edge
           lastVerifiedHash: 'abcd1234'
@@ -1232,12 +1232,12 @@ suite('ScriptNode Tests', () => {
       );
     });
 
-    test('should throw MethodNotImplementedError for upstairsUrl', async () => {
+    test('should throw MethodNotImplementedError for remoteUrl', async () => {
       const folderUri = vscode.Uri.parse('file:///test/workspace/U100001/1466960/draft');
       const folder = ScriptFactory.createFolder(folderUri);
 
       await assert.rejects(
-        async () => await folder.upstairsUrl(),
+        async () => await folder.remoteUrl(),
         /Method not implemented/,
         'Should throw MethodNotImplementedError'
       );
@@ -1362,7 +1362,7 @@ suite('ScriptNode Tests', () => {
       assert.strictEqual(contentString, testContent, 'Content should match');
     });
 
-    test('should get downstairs content as UTF-8 text', async () => {
+    test('should get local content as UTF-8 text', async () => {
       const testContent = 'const x = "hello world";';
       const testUri = vscode.Uri.parse('file:///test/workspace/U100001/1466960/draft/test.js');
 
@@ -1375,7 +1375,7 @@ suite('ScriptNode Tests', () => {
       });
 
       const scriptFile = ScriptFactory.createFile(testUri);
-      const content = await scriptFile.getDownstairsContent();
+      const content = await scriptFile.getLocalContent();
 
       assert.strictEqual(content, testContent, 'Content should match original text');
     });
@@ -1388,7 +1388,7 @@ suite('ScriptNode Tests', () => {
       const scriptFile = ScriptFactory.createFile(testUri);
 
       await assert.rejects(
-        async () => await scriptFile.getDownstairsContent(),
+        async () => await scriptFile.getLocalContent(),
         /File not found/,
         'Should throw error for non-existent file'
       );

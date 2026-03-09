@@ -1,16 +1,17 @@
 import * as vscode from 'vscode';
-import { type ReadOnlyMap } from '../../../types';
+import { type ExtensionPackageJson, type ReadOnlyMap } from '../../../types';
+import { OutputChannels, SettingsKeys } from '../resources/constants';
 import { Auth } from './authentication';
 import { SESSION_MANAGER as SM } from './b6p_session/SessionManager';
-import { OutputChannels, SettingsKeys } from '../resources/constants';
+import { ORG_CACHE as OC } from './cache/OrgCache';
 import { ContextNode } from './context/ContextNode';
 import ctrlPCommands from './ctrl-p-commands';
+import { handleAutoSave } from './services/AutoSaveHandler';
 import readOnlyCheck from './services/ReadOnlyChecker';
 import { UPDATE_MANAGER as UM } from './services/UpdateManager';
-import { SettingsWrapper } from './util/PseudoMaps';
 import { Err } from './util/Err';
+import { SettingsWrapper } from './util/PseudoMaps';
 import { Alert } from './util/ui/Alert';
-import { ORG_CACHE as OC } from './cache/OrgCache';
 
 
 
@@ -147,6 +148,11 @@ export const App = new class extends ContextNode {
     this.settings.sync();
     readOnlyCheck(); // run it once on startup
 
+    // Register the auto-save listener
+    vscode.workspace.onDidSaveTextDocument(document => {
+      handleAutoSave(document);
+    }, undefined, this.context.subscriptions);
+
     // Initialize dependancies
     SM.init(this);
     UM.init(this);
@@ -179,21 +185,32 @@ export const App = new class extends ContextNode {
   }
 
   /**
+   * Gets the extension's package.json data as a typed object.
+   * @lastreviewed null
+   */
+  private getPackageJson(): ExtensionPackageJson {
+    const extension = vscode.extensions.getExtension('bluestep-systems.bsjs-push-pull');
+    if (extension?.packageJSON) {
+      return extension.packageJSON as ExtensionPackageJson;
+    }
+    throw new Err.PackageJsonNotFoundError();
+  }
+
+  /**
    * Gets the current extension version from VS Code extension API
    * @lastreviewed 2025-10-01
    */
   public getVersion(): string {
-    try {
-      // Get the extension from VS Code's extension API
-      const extension = vscode.extensions.getExtension('bluestep-systems.bsjs-push-pull');
-      if (extension && extension.packageJSON && extension.packageJSON.version) {
-        return extension.packageJSON.version;
-      }
-      throw new Err.PackageJsonNotFoundError();
-    } catch (error) {
-      //TODO determine if we want to rethrow or not
-      throw error;
-    }
+    return this.getPackageJson().version;
+  }
+
+  /**
+   * Gets the repository URL from the extension's package.json.
+   * @returns The URL string, e.g. "https://github.com/BlueStep-Platform/bluestep-develop"
+   * @lastreviewed null
+   */
+  public getRepositoryUrl(): string {
+    return this.getPackageJson().repository.url;
   }
 
   public runConverts() {

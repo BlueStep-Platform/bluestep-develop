@@ -104,7 +104,7 @@ import { ScriptRoot } from '../../main/app/util/script/ScriptRoot';
 //     });
 
 //     suite('URI Generation', () => {
-//         test('should generate correct downstairs root URI', () => {
+//         test('should generate correct local root URI', () => {
 //             const rootUri = scriptRoot.getRootUri();
 //             const expectedPath = path.normalize('/test/workspace/configbeh.bluestep.net/1466960');
             
@@ -124,14 +124,14 @@ import { ScriptRoot } from '../../main/app/util/script/ScriptRoot';
 //             );
 //         });
 
-//         test('should generate correct upstairs base URL string', () => {
-//             const baseUrl = scriptRoot.toBaseUpstairsString();
+//         test('should generate correct remote base URL string', () => {
+//             const baseUrl = scriptRoot.toBaseRemoteString();
             
 //             assert.strictEqual(baseUrl, 'https://configbeh.bluestep.net/files/1466960/');
 //         });
 
-//         test('should generate correct upstairs base URL object', () => {
-//             const baseUrl = scriptRoot.toBaseUpstairsUrl();
+//         test('should generate correct remote base URL object', () => {
+//             const baseUrl = scriptRoot.tobaseRemoteUrl();
             
 //             assert.ok(baseUrl instanceof URL);
 //             assert.strictEqual(baseUrl.toString(), 'https://configbeh.bluestep.net/files/1466960/');
@@ -580,7 +580,7 @@ import { ScriptRoot } from '../../main/app/util/script/ScriptRoot';
 //                             meta.pushPullRecords = [];
 //                         }
 //                         meta.pushPullRecords.push({
-//                             downstairsPath: `/test/path${i}`,
+//                             localPath: `/test/path${i}`,
 //                             lastPulled: new Date().toISOString(),
 //                             lastPushed: null,
 //                             lastVerifiedHash: `hash${i}`
@@ -612,7 +612,7 @@ import { ScriptRoot } from '../../main/app/util/script/ScriptRoot';
 //             // Add 1000 records
 //             for (let i = 0; i < 1000; i++) {
 //                 largeMetadata.pushPullRecords.push({
-//                     downstairsPath: `/test/large/path${i}.js`,
+//                     localPath: `/test/large/path${i}.js`,
 //                     lastPulled: new Date(Date.now() - i * 1000).toISOString(),
 //                     lastPushed: i % 2 === 0 ? new Date(Date.now() - i * 500).toISOString() : null,
 //                     lastVerifiedHash: `hash${i}`.repeat(32) // Long hash
@@ -634,7 +634,7 @@ import { ScriptRoot } from '../../main/app/util/script/ScriptRoot';
 //                 scriptName: 'Unicode Test Script 🚀 测试 αβγ',
 //                 webdavId: '1466960',
 //                 pushPullRecords: [{
-//                     downstairsPath: '/test/unicode/файл.js',
+//                     localPath: '/test/unicode/файл.js',
 //                     lastPulled: '2023-01-01T12:00:00.000Z',
 //                     lastPushed: null,
 //                     lastVerifiedHash: 'hash-with-unicode-αβγ'
@@ -646,7 +646,7 @@ import { ScriptRoot } from '../../main/app/util/script/ScriptRoot';
 //             const metadata = await scriptRoot.getMetaData();
 
 //             assert.strictEqual(metadata.scriptName, 'Unicode Test Script 🚀 测试 αβγ');
-//             assert.strictEqual(metadata.pushPullRecords[0].downstairsPath, '/test/unicode/файл.js');
+//             assert.strictEqual(metadata.pushPullRecords[0].localPath, '/test/unicode/файл.js');
 //             assert.strictEqual(metadata.pushPullRecords[0].lastVerifiedHash, 'hash-with-unicode-αβγ');
 //         });
 //     });
@@ -889,7 +889,7 @@ import { ScriptRoot } from '../../main/app/util/script/ScriptRoot';
 //                 scriptName: 'Windows Path Script',
 //                 webdavId: '1466960',
 //                 pushPullRecords: [{
-//                     downstairsPath: 'C:\\workspace\\configbeh.bluestep.net\\1466960\\draft\\test.js',
+//                     localPath: 'C:\\workspace\\configbeh.bluestep.net\\1466960\\draft\\test.js',
 //                     lastPulled: '2023-01-01T12:00:00.000Z',
 //                     lastPushed: null,
 //                     lastVerifiedHash: 'abcd1234'
@@ -901,7 +901,7 @@ import { ScriptRoot } from '../../main/app/util/script/ScriptRoot';
 //             const metadata = await scriptRoot.getMetaData();
 
 //             assert.strictEqual(metadata.scriptName, 'Windows Path Script');
-//             assert.ok(metadata.pushPullRecords[0].downstairsPath.includes('C:'), 'Should preserve Windows paths');
+//             assert.ok(metadata.pushPullRecords[0].localPath.includes('C:'), 'Should preserve Windows paths');
 //         });
 
 //         test('should handle different URI schemes', async () => {

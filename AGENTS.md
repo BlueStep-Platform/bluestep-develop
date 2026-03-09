@@ -117,5 +117,19 @@ This ensures all AI-generated documentation receives proper human oversight befo
 
 ### Finally, it is IMPERATIVE that the keyword `any` is NEVER used in the codebase. If a situation arises where the AI agent believes `any` is necessary, it MUST leave a `//HUMAN-REVIEW-NEEDED` comment explaining the situation so that a human can review and provide an appropriate type. If a human reviewer later decides to use `any`, they must also leave a `//REASON-FOR-ANY` comment explaining why.
 
+## Naming Conventions
+
+### Local vs Remote Terminology
+
+**IMPORTANT**: Throughout this codebase, we use standardized terminology to distinguish between locations:
+
+- **Local**: Refers to the developer's local file system (VS Code workspace)
+  - Variable examples: `localPath`, `localUri`, `LocalUriParser`
+  - Function examples: `getLocalFileUri()`, `getLocalContent()`
+  
+- **Remote**: Refers to the BlueStep server/cloud environment (WebDAV endpoints)
+  - Variable examples: `remoteUrl`, `remoteHash`, `baseRemoteUrl`
+  - Function examples: `remoteUrl()`, `toScriptBaseRemoteUrl()`, `getRemoteHash()`
+
 ## OVERRIDING GUIDELINES
 In exceptional cases where following these guidelines is impractical or impossible, AI agents may override them. However, any such overrides must be clearly documented with a `//HUMAN-REVIEW-NEEDED` comment in the relevant code or documentation, explaining the reason for the override and what needs to be reviewed by a human. This ensures transparency and allows for proper human oversight of any deviations from standard practices.

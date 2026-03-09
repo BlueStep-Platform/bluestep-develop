@@ -49,3 +49,16 @@ Without these exclusions, VS Code may experience:
 
 Or edit your `.vscode/settings.json` directly and add the JSON above.
 
+## Extension Settings
+
+All settings are available under **B6P Push/Pull** in VS Code settings (`Ctrl+,` → search `bsjs-push-pull`).
+
+### Auto Save (`bsjs-push-pull.autoSave`)
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `autoSave.enabled` | boolean | `false` | When `true`, automatically pushes **and** snapshots the current B6P script every time a file is saved. Non-B6P files are silently ignored. |
+
+> **Tip:** Because auto-save suppresses the normal push/snapshot completion popups, you can safely enable this setting without being flooded by notifications.
+
+

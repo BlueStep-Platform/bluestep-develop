@@ -193,7 +193,7 @@ type ScriptMetaData = {
     /**
      * actual location of the file locally
      */
-    downstairsPath: string;
+    localPath: string;
 
     /**
      * the time `new Date().toUTCString()` when the last push happened
@@ -373,6 +373,16 @@ export type UpdateInfo = {
   releaseNotes: string;
   publishedAt: string;
 };
+/**
+ * The shape of this extension's package.json as read from the VS Code extension API.
+ */
+export type ExtensionPackageJson = {
+  version: string;
+  repository: {
+    type: string;
+    url: string;
+  };
+};
 export type ClientInfo = {
   version: string;
   lastChecked: number;
@@ -506,7 +516,17 @@ export type Settings = {
      * the push-complete notification
      */
     pushComplete: boolean;
-  }
+  };
+
+  /**
+   * Settings for the auto-save push+snapshot feature.
+   */
+  autoSave: {
+    /**
+     * When true, automatically pushes and snapshots the script whenever a file is saved.
+     */
+    enabled: boolean;
+  };
 };
 
 /**
@@ -693,6 +713,20 @@ export type TsConfig = {
     excludeDirectories?: string[];
     excludeFiles?: string[];
   };
+};
+
+/**
+ * Minimal shape of a script's `draft/package.json` that the extension needs to inspect.
+ * Only the `repository` field is required; all other keys are treated as opaque Serializable
+ * data.
+ */
+export type ScriptPackageJson = {
+  /**
+   * Optional repository declaration, mirrors the npm `repository` field.
+   * Can be a plain URL string or an object with at minimum a `url` property.
+   */
+  repository?: string | { type?: string; url: string; };
+  [key: string]: Serializable;
 };
 
 /**

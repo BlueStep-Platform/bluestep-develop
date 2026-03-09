@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
  * Interface representing an element with a file system path and URI.
  * 
  * This is very specifically NOT a {@link vscode.TreeItem}, because the element it represents
- * is required to neither exist on the local filesystem, nor have an extant counterpart upstairs.
+ * is required to neither exist on the local filesystem, nor have an extant counterpart on remote.
  * 
  * @lastreviewed 2025-10-01
  */

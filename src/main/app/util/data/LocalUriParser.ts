@@ -5,13 +5,13 @@ import { ScriptRoot } from '../script/ScriptRoot';
 import { FolderNames } from '../../../resources/constants';
 
 /**
- * A utility class to parse downstairs URIs into their components.
+ * A utility class to parse local URIs into their components.
  */
-export class DownstairsUriParser {
+export class LocalUriParser {
 
 
   /**
-   * The type of the downstairs file: "draft", "declarations", or "metadata" (for .b6p_metadata.json files)
+   * The type of the local file: "draft", "declarations", or "metadata" (for .b6p_metadata.json files)
    */
   public readonly type: "draft" | "declarations" | "metadata" | "root" | "snapshot";
 
@@ -143,7 +143,7 @@ export class DownstairsUriParser {
    * @param other The other parser to compare against.
    * @returns True if the parsers are equal, false otherwise.
    */
-  public equals(other: DownstairsUriParser): boolean {
+  public equals(other: LocalUriParser): boolean {
     return this.prependingPath === other.prependingPath &&
       this.scriptName === other.scriptName &&
       this.type === other.type &&

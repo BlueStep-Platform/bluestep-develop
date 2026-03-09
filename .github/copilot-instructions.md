@@ -84,6 +84,27 @@ npm run package-extension  # Create .vsix package
 - Runs 5 seconds after startup, checks every 24 hours
 - Configured via `bsjs-push-pull.updateCheck.*` settings
 
+### Auto-Save Push+Snapshot
+- Implemented in `src/main/app/services/AutoSaveHandler.ts`
+- Registered as a `vscode.workspace.onDidSaveTextDocument` listener in `App.init()`
+- Controlled by the `bsjs-push-pull.autoSave.enabled` setting (default: `false`)
+- On save: performs a silent push then compiles draft + silent snapshot push
+- Non-B6P files are silently ignored via catch; errors already surfaced to the user are re-swallowed
+- **Race condition prevention**: Two-stage strategy to avoid overlapping operations:
+  - *Per-document debounce* (`DEBOUNCE_DELAY_MS = 300 ms`): rapid saves of the same file reset the timer so only the final save fires ("latest save wins").
+  - *Per-script-root promise chain* (`scheduleForRoot`): after the debounce fires, `ScriptFactory.createScriptRoot()` derives a root key and calls `scheduleForRoot`. If no chain exists, a `RootQueue` entry is created and a `drainQueue` async loop is started. If a chain is already running, only `queue.latestDocument` is updated — the drain loop re-checks this field after each `await` and iterates if a newer document arrived. Once the loop sees `latestDocument === lastProcessed` (no new arrivals), it deletes the map entry in the same synchronous continuation, eliminating any window where a queued document could be silently dropped.
+  - Both `debounceTimers` and `rootQueues` are module-level `Map`s that live for the lifetime of the extension host.
+
+### Git-Managed Pull
+- Both "Pull Script" (`pull.ts`) and "Pull Current Script" (`pullCurrent.ts`) check for a
+  `repository` field in `draft/package.json` before performing any WebDAV operations.
+- If the field is present, `git pull` is run via `util/GitUtil.ts` in the script root directory
+  (the folder containing `draft/`, where `.git` lives), and the output is shown to the user.
+- If the field is absent or the file does not exist, the commands fall back to the normal
+  WebDAV pull flow.
+- `ScriptRoot.getDraftGitRepository()` and `ScriptRoot.getDraftPackageJson()` encapsulate the
+  file-reading logic for this feature.
+
 ## Integration Points
 
 ### VS Code APIs

@@ -6,12 +6,12 @@
   "publisher": "bluestep-systems",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluestep-systems/vscode-extension"
+    "url": "https://github.com/BlueStep-Platform/bluestep-develop"
   },
   "bugs": {
-    "url": "https://github.com/bluestep-systems/vscode-extension/issues"
+    "url": "https://github.com/BlueStep-Platform/bluestep-develop/issues"
   },
-  "homepage": "https://github.com/bluestep-systems/vscode-extension#readme",
+  "homepage": "https://github.com/BlueStep-Platform/bluestep-develop#readme",
   "galleryBanner": {
     "color": "#C80000",
     "theme": "dark"
@@ -90,6 +90,19 @@
             "editPresentation": "multilineText",
             "description": "Override the version used for update checks in debug mode",
             "default": "1.1.0"
+          }
+        }
+      },
+      {
+        "title": "Auto Save",
+        "order": 3,
+        "id": "bsjs-push-pull.autoSave",
+        "properties": {
+          "bsjs-push-pull.autoSave.enabled": {
+            "order": 0,
+            "type": "boolean",
+            "description": "Automatically push and snapshot the current B6P script whenever a file is saved",
+            "default": false
           }
         }
       }
@@ -181,15 +194,15 @@
       },
       {
         "view": "b6pMenuView",
-        "contents": "[Pull Current](command:bsjs-push-pull.pullCurrent)"
+        "contents": "[$(cloud-download) Pull Current](command:bsjs-push-pull.pullCurrent)"
       },
       {
         "view": "b6pMenuView",
-        "contents": "[Push Current](command:bsjs-push-pull.pushCurrent)"
+        "contents": "[$(cloud-upload) Push Current](command:bsjs-push-pull.pushCurrent)"
       },
       {
         "view": "b6pMenuView",
-        "contents": "[Semi-Snapshot Current](command:bsjs-push-pull.snapshot)"
+        "contents": "[$(device-camera) Semi-Snapshot Current](command:bsjs-push-pull.snapshot)"
       },
       {
         "view": "b6pMenuView",
@@ -197,39 +210,11 @@
       },
       {
         "view": "b6pMenuView",
-        "contents": "[Pull New Script](command:bsjs-push-pull.pullScript)"
+        "contents": "[$(repo-clone) Pull New Script](command:bsjs-push-pull.pullScript)"
       },
       {
         "view": "b6pMenuView",
-        "contents": "[Push Current Script To...](command:bsjs-push-pull.pushScript)"
-      },
-      {
-        "view": "b6pMenuView",
-        "contents": "[Update Credentials](command:bsjs-push-pull.updateCredentials)"
-      },
-      {
-        "view": "b6pMenuView",
-        "contents": "[Check for Updates](command:bsjs-push-pull.checkForUpdates)"
-      },
-      {
-        "view": "b6pMenuView",
-        "contents": "[Change Settings](command:bsjs-push-pull.openSettings)"
-      },
-      {
-        "view": "b6pMenuView",
-        "contents": "---- Advanced ----"
-      },
-      {
-        "view": "b6pMenuView",
-        "contents": "[Quick Deploy](command:bsjs-push-pull.quickDeploy)"
-      },
-      {
-        "view": "b6pMenuView",
-        "contents": "[Run Custom Script](command:bsjs-push-pull.runTask)"
-      },
-      {
-        "view": "b6pMenuView",
-        "contents": "[Clear Sessions](command:bsjs-push-pull.clearSessions)"
+        "contents": "[$(settings-gear) Change Settings](command:bsjs-push-pull.openSettings)"
       },
       {
         "view": "b6pMenuView",
@@ -238,17 +223,17 @@
       },
       {
         "view": "b6pMenuView",
-        "contents": "[Toggle Test Task](command:bsjs-push-pull.testTask)",
+        "contents": "[$(beaker) Toggle Test Task](command:bsjs-push-pull.testTask)",
         "when": "bsjs-push-pull.debugMode.enabled"
       },
       {
         "view": "b6pMenuView",
-        "contents": "[GOTO BlueSync](command:bsjs-push-pull.notify)",
+        "contents": "[$(link-external) GOTO BlueSync](command:bsjs-push-pull.notify)",
         "when": "bsjs-push-pull.debugMode.enabled"
       },
       {
         "view": "b6pMenuView",
-        "contents": "[Trigger BlueSync Task](command:bsjs-push-pull.notify)",
+        "contents": "[$(play) Trigger BlueSync Task](command:bsjs-push-pull.notify)",
         "when": "bsjs-push-pull.debugMode.enabled"
       }
     ]

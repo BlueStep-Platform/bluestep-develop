@@ -13,4 +13,5 @@ export namespace SpecialFiles {
   export const DS_STORE_PATTERN = "**/.DS_Store";
   export const GITIGNORE = ".gitignore";
   export const B6P_METADATA = ".b6p_metadata.json";
+  export const PACKAGE_JSON = "package.json";
 }

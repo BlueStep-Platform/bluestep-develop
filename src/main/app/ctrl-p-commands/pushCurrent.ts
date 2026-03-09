@@ -44,7 +44,7 @@ export default async function (args? : {isSnapshot: boolean, sr: ScriptRoot}): P
         return;
       }
     }
-    const overrideFormulaUrl = await actual_sr.toScriptBaseUpstairsString();
+    const overrideFormulaUrl = await actual_sr.toScriptBaseRemoteString();
     await pushScript({ overrideFormulaUrl, isSnapshot: args?.isSnapshot });
   } catch(e) {
     if (e instanceof Err.AlreadyAlertedError) {

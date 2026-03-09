@@ -1,16 +1,16 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { DownstairsUriParser } from '../../main/app/util/data/DownstairsUrIParser';
+import { LocalUriParser } from '../../main/app/util/data/LocalUriParser';
 import { ScriptRoot } from '../../main/app/util/script/ScriptRoot';
 
-suite('DownstairsUriParser Tests', () => {
+suite('LocalUriParser Tests', () => {
   
   suite('Constructor - Valid URI Parsing', () => {
     
     test('should parse basic draft URI correctly', () => {
       const uri = vscode.Uri.file('/workspace/U100001/12345/draft');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.prependingPath, path.sep + 'workspace' + path.sep + 'U100001');
       assert.strictEqual(parser.scriptName, '12345');
@@ -21,7 +21,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should parse basic declarations URI correctly', () => {
       const uri = vscode.Uri.file('/workspace/U100002/67890/declarations');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.prependingPath, path.sep + 'workspace' + path.sep + 'U100002');
       assert.strictEqual(parser.scriptName, '67890');
@@ -31,7 +31,7 @@ suite('DownstairsUriParser Tests', () => {
     
     test('should parse metadata file URI correctly', () => {
       const uri = vscode.Uri.file('/workspace/U100003/11111/.b6p_metadata.json');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.prependingPath, path.sep + 'workspace' + path.sep + 'U100003');
       assert.strictEqual(parser.scriptName, '11111');
@@ -40,7 +40,7 @@ suite('DownstairsUriParser Tests', () => {
     });
     test('should parse root file URI correctly', () => {
       const uri = vscode.Uri.file('/home/brendan/test/extensiontest/U900005/Fresh Test/');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.prependingPath, path.sep + 'home' + path.sep + 'brendan' + path.sep + 'test' + path.sep + 'extensiontest' + path.sep + 'U900005');
       assert.strictEqual(parser.scriptName, 'Fresh Test');
@@ -49,7 +49,7 @@ suite('DownstairsUriParser Tests', () => {
     });
     test('should parse root file URI correctly without trailing slash', () => {
       const uri = vscode.Uri.file('/home/brendan/test/extensiontest/U900005/Fresh Test');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.prependingPath, path.sep + 'home' + path.sep + 'brendan' + path.sep + 'test' + path.sep + 'extensiontest' + path.sep + 'U900005');
       assert.strictEqual(parser.scriptName, 'Fresh Test');
@@ -59,7 +59,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should parse gitignore file URI correctly', () => {
       const uri = vscode.Uri.file('/workspace/U100004/22222/.gitignore');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.prependingPath, path.sep + 'workspace' + path.sep + 'U100004');
       assert.strictEqual(parser.scriptName, '22222');
@@ -69,7 +69,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should parse draft URI with nested file correctly', () => {
       const uri = vscode.Uri.file('/workspace/U100005/44444/draft/subfolder/script.js');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.prependingPath, path.sep + 'workspace' + path.sep + 'U100005');
       assert.strictEqual(parser.scriptName, '44444');
@@ -79,7 +79,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should parse declarations URI with nested file correctly', () => {
       const uri = vscode.Uri.file('/workspace/U100006/55555/declarations/types/interfaces.d.ts');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.prependingPath, path.sep + 'workspace' + path.sep + 'U100006');
       assert.strictEqual(parser.scriptName, '55555');
@@ -89,7 +89,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should handle deeply nested prepending path', () => {
       const uri = vscode.Uri.file('/very/deep/nested/workspace/folder/U100007/66666/draft/file.js');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.prependingPath, path.sep + 'very' + path.sep + 'deep' + path.sep + 'nested' + path.sep + 'workspace' + path.sep + 'folder' + path.sep + 'U100007');
       assert.strictEqual(parser.scriptName, '66666');
@@ -103,7 +103,7 @@ suite('DownstairsUriParser Tests', () => {
       const uri = vscode.Uri.file('/77777/draft');
 
       assert.throws(() => {
-        new DownstairsUriParser(uri);
+        new LocalUriParser(uri);
       }, /URI must contain a segment matching U###### pattern/);
     });
   });
@@ -114,7 +114,7 @@ suite('DownstairsUriParser Tests', () => {
       const uri = vscode.Uri.file('');
 
       assert.throws(() => {
-        new DownstairsUriParser(uri);
+        new LocalUriParser(uri);
       }, /The provided URI does not conform to expected structure/);
     });
 
@@ -122,7 +122,7 @@ suite('DownstairsUriParser Tests', () => {
       const uri = vscode.Uri.file('/workspace/U100008/12345/unknown');
 
       assert.throws(() => {
-        new DownstairsUriParser(uri);
+        new LocalUriParser(uri);
       }, /Invalid type segment: unknown/);
     });
   });
@@ -131,7 +131,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should return correct shaved name for basic URI', () => {
       const uri = vscode.Uri.file('/workspace/U100009/12345/draft');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       const expected = path.sep + 'workspace' + path.sep + 'U100009' + path.sep + '12345';
       assert.strictEqual(parser.getShavedName(), expected);
@@ -139,7 +139,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should return correct shaved name for nested prepending path', () => {
       const uri = vscode.Uri.file('/very/deep/workspace/U100010/67890/declarations/file.d.ts');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       const expected = path.sep + 'very' + path.sep + 'deep' + path.sep + 'workspace' + path.sep + 'U100010' + path.sep + '67890';
       assert.strictEqual(parser.getShavedName(), expected);
@@ -149,8 +149,8 @@ suite('DownstairsUriParser Tests', () => {
       const uri1 = vscode.Uri.file('/workspace/U100011/12345/draft');
       const uri2 = vscode.Uri.file('/workspace/U100011/12345/draft/deep/nested/file.js');
 
-      const parser1 = new DownstairsUriParser(uri1);
-      const parser2 = new DownstairsUriParser(uri2);
+      const parser1 = new LocalUriParser(uri1);
+      const parser2 = new LocalUriParser(uri2);
 
       assert.strictEqual(parser1.getShavedName(), parser2.getShavedName());
     });
@@ -160,9 +160,9 @@ suite('DownstairsUriParser Tests', () => {
       const uri2 = vscode.Uri.file('/workspace/U100012/12345/declarations');
       const uri3 = vscode.Uri.file('/workspace/U100012/12345/.b6p_metadata.json');
 
-      const parser1 = new DownstairsUriParser(uri1);
-      const parser2 = new DownstairsUriParser(uri2);
-      const parser3 = new DownstairsUriParser(uri3);
+      const parser1 = new LocalUriParser(uri1);
+      const parser2 = new LocalUriParser(uri2);
+      const parser3 = new LocalUriParser(uri3);
 
       const shavedName = parser1.getShavedName();
       assert.strictEqual(parser2.getShavedName(), shavedName);
@@ -174,8 +174,8 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should return true for identical parsers', () => {
       const uri = vscode.Uri.file('/workspace/U100013/12345/draft/file.js');
-      const parser1 = new DownstairsUriParser(uri);
-      const parser2 = new DownstairsUriParser(uri);
+      const parser1 = new LocalUriParser(uri);
+      const parser2 = new LocalUriParser(uri);
 
       assert.strictEqual(parser1.equals(parser2), true);
     });
@@ -183,8 +183,8 @@ suite('DownstairsUriParser Tests', () => {
     test('should return false for different prepending paths', () => {
       const uri1 = vscode.Uri.file('/workspace1/U100014/12345/draft/file.js');
       const uri2 = vscode.Uri.file('/workspace2/U100014/12345/draft/file.js');
-      const parser1 = new DownstairsUriParser(uri1);
-      const parser2 = new DownstairsUriParser(uri2);
+      const parser1 = new LocalUriParser(uri1);
+      const parser2 = new LocalUriParser(uri2);
 
       assert.strictEqual(parser1.equals(parser2), false);
     });
@@ -192,8 +192,8 @@ suite('DownstairsUriParser Tests', () => {
     test('should return false for different WebDAV IDs', () => {
       const uri1 = vscode.Uri.file('/workspace/U100015/12345/draft/file.js');
       const uri2 = vscode.Uri.file('/workspace/U100015/67890/draft/file.js');
-      const parser1 = new DownstairsUriParser(uri1);
-      const parser2 = new DownstairsUriParser(uri2);
+      const parser1 = new LocalUriParser(uri1);
+      const parser2 = new LocalUriParser(uri2);
 
       assert.strictEqual(parser1.equals(parser2), false);
     });
@@ -201,8 +201,8 @@ suite('DownstairsUriParser Tests', () => {
     test('should return false for different types', () => {
       const uri1 = vscode.Uri.file('/workspace/U100016/12345/draft/file.js');
       const uri2 = vscode.Uri.file('/workspace/U100016/12345/declarations/file.js');
-      const parser1 = new DownstairsUriParser(uri1);
-      const parser2 = new DownstairsUriParser(uri2);
+      const parser1 = new LocalUriParser(uri1);
+      const parser2 = new LocalUriParser(uri2);
 
       assert.strictEqual(parser1.equals(parser2), false);
     });
@@ -210,8 +210,8 @@ suite('DownstairsUriParser Tests', () => {
     test('should return false for different rest paths', () => {
       const uri1 = vscode.Uri.file('/workspace/U100017/12345/draft/file1.js');
       const uri2 = vscode.Uri.file('/workspace/U100017/12345/draft/file2.js');
-      const parser1 = new DownstairsUriParser(uri1);
-      const parser2 = new DownstairsUriParser(uri2);
+      const parser1 = new LocalUriParser(uri1);
+      const parser2 = new LocalUriParser(uri2);
 
       assert.strictEqual(parser1.equals(parser2), false);
     });
@@ -221,28 +221,28 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should return true for draft type', () => {
       const uri = vscode.Uri.file('/workspace/U100018/12345/draft/file.js');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.isDeclarationsOrDraft(), true);
     });
 
     test('should return true for declarations type', () => {
       const uri = vscode.Uri.file('/workspace/U100019/12345/declarations/types.d.ts');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.isDeclarationsOrDraft(), true);
     });
 
     test('should return false for metadata type (.b6p_metadata.json)', () => {
       const uri = vscode.Uri.file('/workspace/U100020/12345/.b6p_metadata.json');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.isDeclarationsOrDraft(), false);
     });
 
     test('should return false for metadata type (.gitignore)', () => {
       const uri = vscode.Uri.file('/workspace/U100021/12345/.gitignore');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.isDeclarationsOrDraft(), false);
     });
@@ -252,7 +252,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should return correct URI for basic prepending path', () => {
       const uri = vscode.Uri.file('/workspace/U100022/12345/draft');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       const prependingUri = parser.prependingPathUri();
       assert.strictEqual(prependingUri.fsPath, path.sep + 'workspace' + path.sep + 'U100022');
@@ -261,7 +261,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should return correct URI for nested prepending path', () => {
       const uri = vscode.Uri.file('/very/deep/nested/workspace/folder/U100023/67890/declarations/file.d.ts');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       const prependingUri = parser.prependingPathUri();
       assert.strictEqual(prependingUri.fsPath, path.sep + 'very' + path.sep + 'deep' + path.sep + 'nested' + path.sep + 'workspace' + path.sep + 'folder' + path.sep + 'U100023');
@@ -273,13 +273,13 @@ suite('DownstairsUriParser Tests', () => {
       const uri = vscode.Uri.file('/77777/draft');
 
       assert.throws(() => {
-        new DownstairsUriParser(uri);
+        new LocalUriParser(uri);
       }, /URI must contain a segment matching U###### pattern/);
     });
 
     test('should be consistent with prependingPath property', () => {
       const uri = vscode.Uri.file('/some/complex/path/structure/U100024/88888/draft/nested/file.js');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       const prependingUri = parser.prependingPathUri();
       assert.strictEqual(prependingUri.fsPath, parser.prependingPath);
@@ -288,7 +288,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should return valid URI that can be used for file operations', () => {
       const uri = vscode.Uri.file('/workspace/projects/U100025/99999/draft/script.js');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       const prependingUri = parser.prependingPathUri();
 
@@ -301,7 +301,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should handle metadata files correctly', () => {
       const uri = vscode.Uri.file('/workspace/U100026/11111/.b6p_metadata.json');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       const prependingUri = parser.prependingPathUri();
       assert.strictEqual(prependingUri.fsPath, path.sep + 'workspace' + path.sep + 'U100026');
@@ -310,7 +310,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should handle gitignore files correctly', () => {
       const uri = vscode.Uri.file('/workspace/U100027/22222/.gitignore');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       const prependingUri = parser.prependingPathUri();
       assert.strictEqual(prependingUri.fsPath, path.sep + 'workspace' + path.sep + 'U100027');
@@ -322,9 +322,9 @@ suite('DownstairsUriParser Tests', () => {
       const declarationsUri = vscode.Uri.file('/workspace/U100028/12345/declarations/types.d.ts');
       const metadataUri = vscode.Uri.file('/workspace/U100028/12345/.b6p_metadata.json');
 
-      const draftParser = new DownstairsUriParser(draftUri);
-      const declarationsParser = new DownstairsUriParser(declarationsUri);
-      const metadataParser = new DownstairsUriParser(metadataUri);
+      const draftParser = new LocalUriParser(draftUri);
+      const declarationsParser = new LocalUriParser(declarationsUri);
+      const metadataParser = new LocalUriParser(metadataUri);
 
       const draftPrependingUri = draftParser.prependingPathUri();
       const declarationsPrependingUri = declarationsParser.prependingPathUri();
@@ -343,8 +343,8 @@ suite('DownstairsUriParser Tests', () => {
       const metadataUri = vscode.Uri.file(`/workspace/U100029/12345/${ScriptRoot.METADATA_FILENAME}`);
       const gitignoreUri = vscode.Uri.file(`/workspace/U100029/12345/${ScriptRoot.GITIGNORE_FILENAME}`);
 
-      const metadataParser = new DownstairsUriParser(metadataUri);
-      const gitignoreParser = new DownstairsUriParser(gitignoreUri);
+      const metadataParser = new LocalUriParser(metadataUri);
+      const gitignoreParser = new LocalUriParser(gitignoreUri);
 
       assert.strictEqual(metadataParser.type, 'metadata');
       assert.strictEqual(gitignoreParser.type, 'metadata');
@@ -357,7 +357,7 @@ suite('DownstairsUriParser Tests', () => {
     test('should handle URL-encoded scriptName with spaces and .gitignore', () => {
       // This was the original issue: file:///c%3A/Users/jrigb/Bluestep/Organizations/U142023/Site%20Audit%20Post-Save/.gitignore
       const uri = vscode.Uri.parse('file:///c%3A/Users/jrigb/Bluestep/Organizations/U142023/Site%20Audit%20Post-Save/.gitignore');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.scriptName, 'Site Audit Post-Save');
       assert.strictEqual(parser.type, 'metadata');
@@ -366,7 +366,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should handle scriptName with spaces in draft folder', () => {
       const uri = vscode.Uri.file('/workspace/U100030/My Script Name/draft/file.js');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.scriptName, 'My Script Name');
       assert.strictEqual(parser.type, 'draft');
@@ -375,7 +375,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should handle scriptName with multiple spaces', () => {
       const uri = vscode.Uri.file('/workspace/U100031/Multi  Space   Name/declarations/types.d.ts');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.scriptName, 'Multi  Space   Name');
       assert.strictEqual(parser.type, 'declarations');
@@ -384,7 +384,7 @@ suite('DownstairsUriParser Tests', () => {
 
     test('should handle special characters in scriptName', () => {
       const uri = vscode.Uri.file('/workspace/U100032/Script-Name_123 (v2)/draft/file.js');
-      const parser = new DownstairsUriParser(uri);
+      const parser = new LocalUriParser(uri);
 
       assert.strictEqual(parser.scriptName, 'Script-Name_123 (v2)');
       assert.strictEqual(parser.type, 'draft');

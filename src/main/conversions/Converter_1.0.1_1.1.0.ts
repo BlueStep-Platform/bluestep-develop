@@ -16,10 +16,10 @@ export class Converter1_0_1_to_1_1_0 extends Converter {
         const sf = ScriptFactory.createFile(file);
         const sr = sf.getScriptRoot();
         const metaDataDotJson = await sr.getAsFolder().getMetadataDotJson();
-        const baseUpstairsUrl = await sr.toScriptBaseUpstairsUrl();
+        const baseRemoteUrl = await sr.toScriptbaseRemoteUrl();
 
         const displayName = metaDataDotJson.displayName || (() => { throw new Error("Missing displayName in metadata"); })();
-        const U = await new OrgWorker(baseUpstairsUrl).getU();
+        const U = await new OrgWorker(baseRemoteUrl).getU();
         await sr.modifyMetaData(meta => {
           meta.U = U;
           meta.scriptName = displayName;
