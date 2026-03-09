@@ -8,9 +8,9 @@ import end from './lifecycle/end';
  * THIS MUST EXIST FOR THE EXTENSION TO WORK
  * @param context
  */
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
 	try {
-		start(context);
+		await start(context);
 	} catch (error) {
 		console.trace(error);
 	}

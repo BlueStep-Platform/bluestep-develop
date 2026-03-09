@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking Changes
+- **Settings namespace renamed** – All extension settings have been moved from the
+  `bsjs-push-pull.*` prefix to `bluestep-develop.*`.  A one-time automatic migration runs on
+  first activation after upgrading: existing values are copied into the new namespace only when
+  the corresponding new key is still unset, so any values you have already configured under the
+  new prefix are never overwritten.  After migration completes a flag is stored in VS Code's
+  global state so the migration is skipped on every subsequent activation.
+
 ### Added
 - **Auto-push trigger modes** – `bluestep-develop.autoSave.enabled` (boolean) has been replaced by
   `bluestep-develop.autoSave.trigger` (enum: `never` | `onSave` | `onBuild`).  Select `onBuild` to
