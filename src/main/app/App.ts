@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { type ExtensionPackageJson, type ReadOnlyMap } from '../../../types';
-import { OutputChannels, SettingsKeys } from '../resources/constants';
+import { ExtensionConfig, OutputChannels, SettingsKeys } from '../resources/constants';
 import { Auth } from './authentication';
 import { SESSION_MANAGER as SM } from './b6p_session/SessionManager';
 import { ORG_CACHE as OC } from './cache/OrgCache';
@@ -63,7 +63,7 @@ export const App = new class extends ContextNode {
         App.toggleDebugMode();
       })],
       ['bluestep-develop.openSettings', vscode.commands.registerCommand('bluestep-develop.openSettings', async () => {
-        vscode.commands.executeCommand('workbench.action.openSettings', "@ext:bluestep-systems.bluestep-develop");
+        vscode.commands.executeCommand('workbench.action.openSettings', `@ext:${ExtensionConfig.EXTENSION_ID}`);
       })]
     ]);
     constructor() {}
