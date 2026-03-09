@@ -1,8 +1,8 @@
 {
-  "name": "bsjs-push-pull",
+  "name": "bluestep-develop",
   "displayName": "B6P Push/Pull",
   "description": "Sync JavaScript files with BlueStep systems via WebDAV",
-  "version": "1.1.23",
+  "version": "2026.03.09.01",
   "publisher": "bluestep-systems",
   "repository": {
     "type": "git",
@@ -17,7 +17,7 @@
     "theme": "dark"
   },
   "engines": {
-    "vscode": ">=1.99.0"
+    "vscode": ">=1.103.0"
   },
   "categories": [
     "Other"
@@ -101,7 +101,11 @@
           "bsjs-push-pull.autoSave.trigger": {
             "order": 0,
             "type": "string",
-            "enum": ["never", "onSave", "onBuild"],
+            "enum": [
+              "never",
+              "onSave",
+              "onBuild"
+            ],
             "enumDescriptions": [
               "Disable automatic push+snapshot",
               "Automatically push and snapshot whenever a B6P file is saved",
@@ -251,7 +255,7 @@
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
-    "package-extension": "node package-extension.js",
+    "package-extension": "npm run package && npx vsce package",
     "clean": "rm -rf dist out *.vsix *.zip",
     "format": "prettier --write \"src/**/*.ts\"",
     "format-check": "prettier --check \"src/**/*.ts\"",
@@ -271,7 +275,7 @@
     "@types/vscode": "^1.103.0",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
-    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "archiver": "^7.0.1",
     "esbuild": "^0.25.8",
