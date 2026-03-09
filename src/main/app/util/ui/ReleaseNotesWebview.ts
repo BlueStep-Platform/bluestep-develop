@@ -36,7 +36,7 @@ function renderMarkdown(text: string): string {
 function sanitizeDownloadUrl(url: string): string {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === 'https:' ? url : '#';
+    return parsed.protocol === 'https:' ? parsed.toString() : '#';
   } catch {
     return '#';
   }
@@ -49,7 +49,7 @@ function sanitizeDownloadUrl(url: string): string {
 export function getReleaseNotesHtml(updateInfo: UpdateInfo): string {
   const releaseNotes = renderMarkdown(updateInfo.releaseNotes);
   const releasedDate = new Date(updateInfo.publishedAt).toLocaleDateString();
-  const safeDownloadUrl = sanitizeDownloadUrl(updateInfo.downloadUrl);
+  const safeDownloadUrl = escapeHtml(sanitizeDownloadUrl(updateInfo.downloadUrl));
 
   return `<!DOCTYPE html>
 <html lang="en">
