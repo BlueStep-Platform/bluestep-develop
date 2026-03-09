@@ -60,14 +60,14 @@ async function executeAutoSave(document: vscode.TextDocument): Promise<void> {
 
     App.logger.info(`Auto-save: pushing ${document.uri.fsPath}`);
 
-    // Regular push (silent – no completion popup, no remote-change prompt, skip unchanged files)
-    await pushScript({ overrideFormulaUrl, skipMessage: true, force: true, onlyChanged: true, scriptRoot: sr });
+    // Regular push (silent – no completion popup, no remote-change prompt, skip unchanged files, no cleanup modal)
+    await pushScript({ overrideFormulaUrl, skipMessage: true, force: true, onlyChanged: true, scriptRoot: sr, skipCleanup: true });
 
     App.logger.info(`Auto-save: snapshotting ${document.uri.fsPath}`);
 
-    // Compile draft folder, then push as snapshot (silent, no remote-change prompt, skip unchanged files)
+    // Compile draft folder, then push as snapshot (silent, no remote-change prompt, skip unchanged files, no cleanup modal)
     await sr.compileDraftFolder();
-    await pushScript({ overrideFormulaUrl, skipMessage: true, force: true, onlyChanged: true, isSnapshot: true, scriptRoot: sr });
+    await pushScript({ overrideFormulaUrl, skipMessage: true, force: true, onlyChanged: true, isSnapshot: true, scriptRoot: sr, skipCleanup: true });
 
     App.logger.info(`Auto-save: completed for ${document.uri.fsPath}`);
     void Alert.info(`✅ Auto-save complete: ${path.basename(document.uri.fsPath)}`);
