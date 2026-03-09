@@ -157,7 +157,7 @@ async function cleanupUnusedRemotePaths(localRootFolderUri?: vscode.Uri, remoteR
   const failures = deleteResults.filter((r): r is PromiseRejectedResult => r.status === "rejected");
   if (failures.length > 0) {
     const messages = failures.map(f => (f.reason instanceof Error ? f.reason.message : String(f.reason)));
-    messages.forEach(msg => App.logger.info(msg));
+    messages.forEach(msg => App.logger.error(msg));
     throw new Error(`Some remote paths could not be deleted:\n${messages.join('\n')}`);
   }
 }
