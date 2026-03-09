@@ -8,6 +8,7 @@ import { ContextNode } from './context/ContextNode';
 import ctrlPCommands from './ctrl-p-commands';
 import { handleAutoBuild, handleAutoSave, handleBuildKeybinding } from './services/AutoSaveHandler';
 import readOnlyCheck from './services/ReadOnlyChecker';
+import { BuildStatusBar } from './util/ui/BuildStatusBar';
 import { UPDATE_MANAGER as UM } from './services/UpdateManager';
 import { Err } from './util/Err';
 import { SettingsWrapper } from './util/PseudoMaps';
@@ -158,6 +159,8 @@ export const App = new class extends ContextNode {
     vscode.tasks.onDidStartTask(event => {
       handleAutoBuild(event.execution.task);
     }, undefined, this.context.subscriptions);
+
+    BuildStatusBar.init(context);
 
     // Initialize dependancies
     SM.init(this);

@@ -6,6 +6,7 @@ import pushScript from '../ctrl-p-commands/push';
 import { Err } from '../util/Err';
 import { ScriptFactory } from '../util/script/ScriptFactory';
 import { Alert } from '../util/ui/Alert';
+import { BuildStatusBar } from '../util/ui/BuildStatusBar';
 
 /**
  * Milliseconds to wait after the last save event for a given document before
@@ -54,6 +55,7 @@ const rootQueues = new Map<string, RootQueue>();
  * @lastreviewed null
  */
 async function executeAutoSave(document: vscode.TextDocument): Promise<void> {
+  BuildStatusBar.begin();
   try {
     const sr = ScriptFactory.createScriptRoot(document.uri);
     const overrideFormulaUrl = await sr.toScriptBaseRemoteString();
@@ -79,6 +81,8 @@ async function executeAutoSave(document: vscode.TextDocument): Promise<void> {
     // Silently skip files that are not part of a B6P script root.
     // In debug mode, log the reason so developers can diagnose unexpected failures.
     App.isDebugMode() && App.logger.info(`Auto-save: skipping ${document.uri.fsPath}: ${e}`);
+  } finally {
+    BuildStatusBar.end();
   }
 }
 
