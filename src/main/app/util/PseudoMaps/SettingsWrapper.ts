@@ -50,7 +50,6 @@ export class SettingsWrapper extends TypedMap<Settings> implements Persistable {
 
   set<K extends keyof Settings>(key: K, value: Settings[K]): this {
     super.set(key, value);
-    console.log(`Setting context key: ${App.appKey}.${key} to ${JSON.stringify(value)}`);
     this.store();
     return this;
   }
@@ -81,6 +80,7 @@ export class SettingsWrapper extends TypedMap<Settings> implements Persistable {
 
       // Set context variable for immediate UI responsiveness
       vscode.commands.executeCommand('setContext', `${App.appKey}.${key}`, value);
+      console.log(`Setting context key: ${App.appKey}.${key} to ${JSON.stringify(value)}`);
 
       if (update) {
         try {
