@@ -5,3 +5,4 @@ out
 *.vsix
 *.zip
 archive
+.claude/settings.local.json
