@@ -6,6 +6,7 @@ import pushScript from '../ctrl-p-commands/push';
 import { Err } from '../util/Err';
 import { ScriptFactory } from '../util/script/ScriptFactory';
 import { Alert } from '../util/ui/Alert';
+import { BuildStatusBar } from '../util/ui/BuildStatusBar';
 
 /**
  * Milliseconds to wait after the last save event for a given document before
@@ -54,6 +55,7 @@ const rootQueues = new Map<string, RootQueue>();
  * @lastreviewed null
  */
 async function executeAutoSave(document: vscode.TextDocument): Promise<void> {
+  BuildStatusBar.begin();
   try {
     const sr = ScriptFactory.createScriptRoot(document.uri);
     const overrideFormulaUrl = await sr.toScriptBaseRemoteString();
@@ -79,6 +81,8 @@ async function executeAutoSave(document: vscode.TextDocument): Promise<void> {
     // Silently skip files that are not part of a B6P script root.
     // In debug mode, log the reason so developers can diagnose unexpected failures.
     App.isDebugMode() && App.logger.info(`Auto-save: skipping ${document.uri.fsPath}: ${e}`);
+  } finally {
+    BuildStatusBar.end();
   }
 }
 
@@ -141,12 +145,18 @@ function scheduleForRoot(rootKey: string, document: vscode.TextDocument): void {
  * Debounces an auto-push+snapshot for the given document and enqueues it via
  * {@link scheduleForRoot} once the debounce window has elapsed.
  *
- * Shared by {@link handleAutoSave} and {@link handleAutoBuild}.
+ * Shared by {@link handleAutoSave}, {@link handleAutoBuild}, and
+ * {@link handleBuildKeybinding}.
  *
- * @param document The document to push and snapshot.
+ * @param document           The document to push and snapshot.
+ * @param precomputedRootKey When the caller has already resolved the script-root
+ *   key (e.g., to validate the document before calling this function), it can
+ *   pass the value here to skip the redundant {@link ScriptFactory.createScriptRoot}
+ *   call inside the debounce callback.  When omitted the key is computed lazily
+ *   inside the callback, and non-B6P files are silently ignored.
  * @lastreviewed null
  */
-function triggerForDocument(document: vscode.TextDocument): void {
+function triggerForDocument(document: vscode.TextDocument, precomputedRootKey?: string): void {
   const docKey = document.uri.toString();
 
   // Clear any existing debounce timer for this document.
@@ -160,14 +170,19 @@ function triggerForDocument(document: vscode.TextDocument): void {
   const timer = setTimeout(() => {
     debounceTimers.delete(docKey);
 
-    // Resolve the script-root key synchronously so we can key per root.
-    // createScriptRoot throws for non-B6P files; catch and bail out silently.
     let rootKey: string;
-    try {
-      const sr = ScriptFactory.createScriptRoot(document.uri);
-      rootKey = sr.rootUri.toString();
-    } catch {
-      return;
+    if (precomputedRootKey !== undefined) {
+      // Caller already validated and resolved the root key — reuse it.
+      rootKey = precomputedRootKey;
+    } else {
+      // Resolve the script-root key synchronously so we can key per root.
+      // createScriptRoot throws for non-B6P files; catch and bail out silently.
+      try {
+        const sr = ScriptFactory.createScriptRoot(document.uri);
+        rootKey = sr.rootUri.toString();
+      } catch {
+        return;
+      }
     }
 
     scheduleForRoot(rootKey, document);
@@ -231,6 +246,54 @@ export function handleAutoBuild(task: vscode.Task): void {
   }
 
   triggerForDocument(activeEditor.document);
+}
+
+/**
+ * Handles the `bluestep-develop.triggerBuild` keybinding command.
+ *
+ * When `autoSave.trigger` is `'onBuild'`, this command is bound to
+ * `Ctrl+Shift+B` so that the extension intercepts the keystroke before VS Code
+ * opens the "Select the build task to run" picker.  It immediately triggers a
+ * push+snapshot for the currently active B6P document.
+ *
+ * If `autoSave.trigger` is not `'onBuild'`, the call is silently ignored so
+ * that the command remains safe to invoke from the Command Palette or any
+ * custom keybinding without accidentally triggering auto-save in other modes.
+ *
+ * If no editor is active, the call is silently ignored.  If the active file is
+ * not part of a valid BlueStep module, a warning is shown to the user.
+ *
+ * @lastreviewed null
+ */
+export function handleBuildKeybinding(): void {
+  if (App.settings.get('autoSave').trigger !== 'onBuild') {
+    return;
+  }
+
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+
+  // Validate that the active file belongs to a valid BlueStep module before
+  // triggering.  Unlike the background handlers (handleAutoSave / handleAutoBuild)
+  // which silently skip non-B6P files, this is a user-initiated action, so we
+  // surface an informative warning instead of silently doing nothing.
+  // The resolved rootKey is passed to triggerForDocument to avoid a redundant
+  // createScriptRoot() call inside the debounce callback.
+  let rootKey: string;
+  try {
+    const sr = ScriptFactory.createScriptRoot(activeEditor.document.uri);
+    rootKey = sr.rootUri.toString();
+  } catch (e) {
+    if (e instanceof Err.InvalidUriStructureError) {
+      void Alert.warning('The current file is not part of a valid BlueStep module. Open a B6P script file to use this command.');
+      return;
+    }
+    throw e;
+  }
+
+  triggerForDocument(activeEditor.document, rootKey);
 }
 
 /**

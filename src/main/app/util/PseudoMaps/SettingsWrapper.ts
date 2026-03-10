@@ -21,7 +21,7 @@ import { TypedMap } from "./TypedMap";
  */
 export class SettingsWrapper extends TypedMap<Settings> implements Persistable {
   public static readonly DEFAULT: Settings = {
-    debugMode: { enabled: false, anyDomainOverrideUrl: "U131364=https://templateassisted.myassn.com/", versionOverride: "1.1.0" },
+    debugMode: { enabled: false, anyDomainOverrideUrl: "U131364=https://templateassisted.myassn.com/", versionOverride: "" },
     updateCheck: { enabled: true, showNotifications: true },
     squelch: { pullComplete: false, pushComplete: false },
     autoSave: { trigger: 'never' }
@@ -33,7 +33,7 @@ export class SettingsWrapper extends TypedMap<Settings> implements Persistable {
     const config: Settings = {} as Settings;
     for (const key of Object.keys(SettingsWrapper.DEFAULT) as (keyof Settings)[]) {
       const val = scopedConfig.get<Settings[typeof key]>(key);
-      config[key] = val !== undefined ? { ...SettingsWrapper.DEFAULT[key], ...val } : SettingsWrapper.DEFAULT[key];
+      (config as Record<keyof Settings, Settings[keyof Settings]>)[key] = val !== undefined ? { ...SettingsWrapper.DEFAULT[key], ...val } : SettingsWrapper.DEFAULT[key];
     }
     super(config);
   }
@@ -108,7 +108,7 @@ export class SettingsWrapper extends TypedMap<Settings> implements Persistable {
     const fleshedOut: Settings = {} as Settings;
     for (const key of Object.keys(SettingsWrapper.DEFAULT) as (keyof Settings)[]) {
       const val = scopedConfig.get<Settings[typeof key]>(key);
-      fleshedOut[key] = val !== undefined ? { ...SettingsWrapper.DEFAULT[key], ...val } : SettingsWrapper.DEFAULT[key];
+      (fleshedOut as Record<keyof Settings, Settings[keyof Settings]>)[key] = val !== undefined ? { ...SettingsWrapper.DEFAULT[key], ...val } : SettingsWrapper.DEFAULT[key];
     }
 
     // Update each property individually to maintain type safety
