@@ -245,7 +245,8 @@ export function handleAutoBuild(task: vscode.Task): void {
  * opens the "Select the build task to run" picker.  It immediately triggers a
  * push+snapshot for the currently active B6P document.
  *
- * If no editor is active the call is silently ignored.
+ * If no editor is active the call is silently ignored.  If the active file is
+ * not part of a valid BlueStep module, a warning is shown to the user.
  *
  * @lastreviewed null
  */
@@ -253,6 +254,20 @@ export function handleBuildKeybinding(): void {
   const activeEditor = vscode.window.activeTextEditor;
   if (!activeEditor) {
     return;
+  }
+
+  // Validate that the active file belongs to a valid BlueStep module before
+  // triggering.  Unlike the background handlers (handleAutoSave / handleAutoBuild)
+  // which silently skip non-B6P files, this is a user-initiated action, so we
+  // surface an informative warning instead of silently doing nothing.
+  try {
+    ScriptFactory.createScriptRoot(activeEditor.document.uri);
+  } catch (e) {
+    if (e instanceof Err.InvalidUriStructureError) {
+      void Alert.warning('The current file is not part of a valid BlueStep module. Open a B6P script file to use this command.');
+      return;
+    }
+    throw e;
   }
 
   triggerForDocument(activeEditor.document);
