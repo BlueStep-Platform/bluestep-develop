@@ -63,7 +63,7 @@ export const App = new class extends ContextNode {
         App.toggleDebugMode();
       })],
       ['bluestep-develop.openSettings', vscode.commands.registerCommand('bluestep-develop.openSettings', async () => {
-        vscode.commands.executeCommand('workbench.action.openSettings', `@ext:${ExtensionConfig.EXTENSION_ID}`);
+        return vscode.commands.executeCommand('workbench.action.openSettings', `@ext:${ExtensionConfig.EXTENSION_ID}`);
       })]
     ]);
     constructor() {}
