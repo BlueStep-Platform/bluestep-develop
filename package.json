@@ -195,14 +195,14 @@
         {
           "id": "myExtensionSidebar",
           "title": "B6P Quick Commands",
-          "icon": "src/main/resources/bluestepLogo.svg"
+          "icon": "resources/bluestepLogo.svg"
         }
       ]
     },
     "views": {
       "myExtensionSidebar": [
         {
-          "icon": "src/main/resources/bluestepLogo.svg",
+          "icon": "resources/bluestepLogo.svg",
           "id": "b6pMenuView",
           "name": "Menu"
         }
