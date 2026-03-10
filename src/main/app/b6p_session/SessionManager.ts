@@ -252,8 +252,8 @@ export const SESSION_MANAGER = new class extends ContextNode {
    */
   public async ensureSession(url: string | URL): Promise<void> {
     url = new URL(url);
-    const sessionData = this.sessions.get(url.origin);
-    if (!sessionData || !sessionData.JSESSIONID || sessionData.lastTouched <= (Date.now() - this.MAX_SESSION_DURATION)) {
+    const hasValid = await this.hasValidSession(url);
+    if (!hasValid) {
       await this.login(url);
     }
   }
