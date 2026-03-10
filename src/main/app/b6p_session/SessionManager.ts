@@ -266,6 +266,7 @@ export const SESSION_MANAGER = new class extends ContextNode {
    * @param url
    * @param options
    * @returns
+   * @lastreviewed null
    */
   public async fetch(url: string | URL, options?: RequestInit): Promise<Response> {
     url = new URL(url);
