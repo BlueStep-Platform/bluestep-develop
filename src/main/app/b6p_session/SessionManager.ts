@@ -246,13 +246,26 @@ export const SESSION_MANAGER = new class extends ContextNode {
   }
 
   /**
+   * Ensures a valid session exists for the given URL's origin, logging in if necessary.
+   * Call this before spawning parallel fetch operations to avoid redundant concurrent logins.
+   * @param url Any URL belonging to the target origin.
+   */
+  public async ensureSession(url: string | URL): Promise<void> {
+    url = new URL(url);
+    const sessionData = this.sessions.get(url.origin);
+    if (!sessionData || !sessionData.JSESSIONID || sessionData.lastTouched <= (Date.now() - this.MAX_SESSION_DURATION)) {
+      await this.login(url);
+    }
+  }
+
+  /**
    * performs a managed fetch. This is simply a wrapper for the standard `node.fetch(..args)`
    * where we merely append and manage the session cookies.
-   * 
+   *
    * Does not automatically retry.
-   * @param url 
-   * @param options 
-   * @returns 
+   * @param url
+   * @param options
+   * @returns
    */
   public async fetch(url: string | URL, options?: RequestInit): Promise<Response> {
     url = new URL(url);

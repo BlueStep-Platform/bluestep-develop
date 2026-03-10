@@ -43,6 +43,7 @@ export default async function ({ overrideFormulaUrl, sourceOps, skipMessage, isS
       Alert.popup(detectedIssues);
       return;
     }
+    await SM.ensureSession(targetFormulaOverride);
     const snList = await sr.getPushableNodes(isSnapshot, onlyChanged);
 
     // Create tasks for progress helper
