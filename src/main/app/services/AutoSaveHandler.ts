@@ -245,12 +245,19 @@ export function handleAutoBuild(task: vscode.Task): void {
  * opens the "Select the build task to run" picker.  It immediately triggers a
  * push+snapshot for the currently active B6P document.
  *
- * If no editor is active the call is silently ignored.  If the active file is
- * not part of a valid BlueStep module, a warning is shown to the user.
+ * If `autoSave.trigger` is not `'onBuild'`, the call is silently ignored so
+ * that the command remains safe to invoke from the Command Palette or any
+ * custom keybinding without accidentally triggering auto-save in other modes.
+ *
+ * If no editor is active the call is silently ignored.
  *
  * @lastreviewed null
  */
 export function handleBuildKeybinding(): void {
+  if (App.settings.get('autoSave').trigger !== 'onBuild') {
+    return;
+  }
+
   const activeEditor = vscode.window.activeTextEditor;
   if (!activeEditor) {
     return;

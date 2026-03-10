@@ -150,6 +150,8 @@ export const App = new class extends ContextNode {
     this.settings.sync();
     readOnlyCheck(); // run it once on startup
 
+    BuildStatusBar.init(context);
+
     // Register the auto-save listener
     vscode.workspace.onDidSaveTextDocument(document => {
       handleAutoSave(document);
@@ -159,8 +161,6 @@ export const App = new class extends ContextNode {
     vscode.tasks.onDidStartTask(event => {
       handleAutoBuild(event.execution.task);
     }, undefined, this.context.subscriptions);
-
-    BuildStatusBar.init(context);
 
     // Initialize dependancies
     SM.init(this);
