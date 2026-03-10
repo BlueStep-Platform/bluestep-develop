@@ -134,7 +134,7 @@ When making changes, update corresponding documentation:
 - **Extension context** managed through ContextNode hierarchy
 - **Output channel**: `App.logger` for "B6P" channel
 - **Custom sidebar**: B6P Quick Commands with contextual actions
-- **Settings**: All prefixed with `bsjs-push-pull.*`
+- **Settings**: All prefixed with `bluestep-develop.*`
 
 ## BlueStep System Integration
 
@@ -146,7 +146,7 @@ When making changes, update corresponding documentation:
 ### Update System
 - Custom GitHub releases-based update checker
 - Runs 5 seconds after startup, checks every 24 hours
-- Configurable via `bsjs-push-pull.updateCheck.*` settings
+- Configurable via `bluestep-develop.updateCheck.*` settings
 
 ### Additional Instructions
 - Defer to AGENTS.md for additional AI agent usage instructions. If there are any discrepancies, AGENTS.md is authoritative.

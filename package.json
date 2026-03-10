@@ -31,15 +31,15 @@
       {
         "title": "Update Check",
         "order": 0,
-        "id": "bsjs-push-pull.updateCheck",
+        "id": "bluestep-develop.updateCheck",
         "properties": {
-          "bsjs-push-pull.updateCheck.enabled": {
+          "bluestep-develop.updateCheck.enabled": {
             "order": 0,
             "type": "boolean",
             "default": true,
             "description": "Enable automatic update checking"
           },
-          "bsjs-push-pull.updateCheck.showNotifications": {
+          "bluestep-develop.updateCheck.showNotifications": {
             "order": 1,
             "type": "boolean",
             "default": true,
@@ -50,15 +50,15 @@
       {
         "title": "Squelch Popups",
         "order": 1,
-        "id": "bsjs-push-pull.squelch",
+        "id": "bluestep-develop.squelch",
         "properties": {
-          "bsjs-push-pull.squelch.pushComplete": {
+          "bluestep-develop.squelch.pushComplete": {
             "order": 0,
             "type": "boolean",
             "description": "Squelch push-complete popup",
             "default": false
           },
-          "bsjs-push-pull.squelch.pullComplete": {
+          "bluestep-develop.squelch.pullComplete": {
             "order": 1,
             "type": "boolean",
             "description": "Squelch pull-complete popup",
@@ -69,22 +69,22 @@
       {
         "title": "Debug Mode",
         "order": 2,
-        "id": "bsjs-push-pull.debugMode",
+        "id": "bluestep-develop.debugMode",
         "properties": {
-          "bsjs-push-pull.debugMode.enabled": {
+          "bluestep-develop.debugMode.enabled": {
             "order": 0,
             "type": "boolean",
             "description": "Enable debug mode",
             "default": false
           },
-          "bsjs-push-pull.debugMode.anyDomainOverrideUrl": {
+          "bluestep-develop.debugMode.anyDomainOverrideUrl": {
             "order": 1,
             "type": "string",
             "editPresentation": "multilineText",
             "description": "Override the domains used for 'anyDomain' lookups in debug mode",
             "default": "U131364=https://templateassisted.myassn.com/"
           },
-          "bsjs-push-pull.debugMode.versionOverride": {
+          "bluestep-develop.debugMode.versionOverride": {
             "order": 2,
             "type": "string",
             "editPresentation": "multilineText",
@@ -96,9 +96,9 @@
       {
         "title": "Auto Save",
         "order": 3,
-        "id": "bsjs-push-pull.autoSave",
+        "id": "bluestep-develop.autoSave",
         "properties": {
-          "bsjs-push-pull.autoSave.trigger": {
+          "bluestep-develop.autoSave.trigger": {
             "order": 0,
             "type": "string",
             "enum": [
@@ -119,63 +119,63 @@
     ],
     "commands": [
       {
-        "command": "bsjs-push-pull.pushScript",
+        "command": "bluestep-develop.pushScript",
         "title": "B6P: Push Script"
       },
       {
-        "command": "bsjs-push-pull.pushCurrent",
+        "command": "bluestep-develop.pushCurrent",
         "title": "B6P: Push Current Script"
       },
       {
-        "command": "bsjs-push-pull.pullScript",
+        "command": "bluestep-develop.pullScript",
         "title": "B6P: Pull New Script"
       },
       {
-        "command": "bsjs-push-pull.pullCurrent",
+        "command": "bluestep-develop.pullCurrent",
         "title": "B6P: Pull Current Script"
       },
       {
-        "command": "bsjs-push-pull.updateCredentials",
+        "command": "bluestep-develop.updateCredentials",
         "title": "B6P: Update Credentials"
       },
       {
-        "command": "bsjs-push-pull.checkForUpdates",
+        "command": "bluestep-develop.checkForUpdates",
         "title": "B6P: Check for Updates"
       },
       {
-        "command": "bsjs-push-pull.report",
+        "command": "bluestep-develop.report",
         "title": "B6P: Report State"
       },
       {
-        "command": "bsjs-push-pull.clearSettings",
+        "command": "bluestep-develop.clearSettings",
         "title": "B6P: Revert to Default Settings"
       },
       {
-        "command": "bsjs-push-pull.clearSessions",
+        "command": "bluestep-develop.clearSessions",
         "title": "B6P: Clear Sessions"
       },
       {
-        "command": "bsjs-push-pull.clearAll",
+        "command": "bluestep-develop.clearAll",
         "title": "B6P: Clear All Persistance"
       },
       {
-        "command": "bsjs-push-pull.runTask",
+        "command": "bluestep-develop.runTask",
         "title": "B6P: Run Task"
       },
       {
-        "command": "bsjs-push-pull.notify",
+        "command": "bluestep-develop.notify",
         "title": "B6P: Notify"
       },
       {
-        "command": "bsjs-push-pull.quickDeploy",
+        "command": "bluestep-develop.quickDeploy",
         "title": "B6P: Quick Deploy"
       },
       {
-        "command": "bsjs-push-pull.snapshot",
+        "command": "bluestep-develop.snapshot",
         "title": "B6P: Snapshot"
       },
       {
-        "command": "bsjs-push-pull.toggleDebug",
+        "command": "bluestep-develop.toggleDebug",
         "title": "B6P: Toggle Debug Mode"
       }
     ],
@@ -204,15 +204,15 @@
       },
       {
         "view": "b6pMenuView",
-        "contents": "[$(cloud-download) Pull Current](command:bsjs-push-pull.pullCurrent)"
+        "contents": "[$(cloud-download) Pull Current](command:bluestep-develop.pullCurrent)"
       },
       {
         "view": "b6pMenuView",
-        "contents": "[$(cloud-upload) Push Current](command:bsjs-push-pull.pushCurrent)"
+        "contents": "[$(cloud-upload) Push Current](command:bluestep-develop.pushCurrent)"
       },
       {
         "view": "b6pMenuView",
-        "contents": "[$(device-camera) Semi-Snapshot Current](command:bsjs-push-pull.snapshot)"
+        "contents": "[$(device-camera) Semi-Snapshot Current](command:bluestep-develop.snapshot)"
       },
       {
         "view": "b6pMenuView",
@@ -220,31 +220,31 @@
       },
       {
         "view": "b6pMenuView",
-        "contents": "[$(repo-clone) Pull New Script](command:bsjs-push-pull.pullScript)"
+        "contents": "[$(repo-clone) Pull New Script](command:bluestep-develop.pullScript)"
       },
       {
         "view": "b6pMenuView",
-        "contents": "[$(settings-gear) Change Settings](command:bsjs-push-pull.openSettings)"
+        "contents": "[$(settings-gear) Change Settings](command:bluestep-develop.openSettings)"
       },
       {
         "view": "b6pMenuView",
         "contents": "---- UNDER DEVELOPMENT ----",
-        "when": "bsjs-push-pull.debugMode.enabled"
+        "when": "bluestep-develop.debugMode.enabled"
       },
       {
         "view": "b6pMenuView",
-        "contents": "[$(beaker) Toggle Test Task](command:bsjs-push-pull.testTask)",
-        "when": "bsjs-push-pull.debugMode.enabled"
+        "contents": "[$(beaker) Toggle Test Task](command:bluestep-develop.testTask)",
+        "when": "bluestep-develop.debugMode.enabled"
       },
       {
         "view": "b6pMenuView",
-        "contents": "[$(link-external) GOTO BlueSync](command:bsjs-push-pull.notify)",
-        "when": "bsjs-push-pull.debugMode.enabled"
+        "contents": "[$(link-external) GOTO BlueSync](command:bluestep-develop.notify)",
+        "when": "bluestep-develop.debugMode.enabled"
       },
       {
         "view": "b6pMenuView",
-        "contents": "[$(play) Trigger BlueSync Task](command:bsjs-push-pull.notify)",
-        "when": "bsjs-push-pull.debugMode.enabled"
+        "contents": "[$(play) Trigger BlueSync Task](command:bluestep-develop.notify)",
+        "when": "bluestep-develop.debugMode.enabled"
       }
     ]
   },

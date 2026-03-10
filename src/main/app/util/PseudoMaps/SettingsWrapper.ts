@@ -9,8 +9,9 @@ import { TypedMap } from "./TypedMap";
 /**
  * A wrapper around the vscode settings for this extension to provide typed access and modification.
  * 
- * A convention is used where the settings key in vscode is `bsjs-push-pull.<settingKey>`
- * and nested keys are represented with dot notation, e.g. `bsjs-push-pull.nested.key`.
+ * A convention is used where the settings key in vscode is `<appKey>.<settingKey>`
+ * (where `<appKey>` is the value of `App.appKey`) and nested keys are represented
+ * with dot notation, e.g. `<appKey>.nested.key`.
  * 
  * We very specifically want to funnel all active settings changes through this class
  * so that we can ensure that the settings are always in sync with the appropriate context variables
@@ -28,8 +29,12 @@ export class SettingsWrapper extends TypedMap<Settings> implements Persistable {
 
   constructor() {
     // Read from user settings (global) with fallback to defaults
-    const config = vscode.workspace.getConfiguration().inspect<Settings>(App.appKey)?.globalValue ||
-      SettingsWrapper.DEFAULT;
+    const scopedConfig = vscode.workspace.getConfiguration(App.appKey);
+    const config: Settings = {} as Settings;
+    for (const key of Object.keys(SettingsWrapper.DEFAULT) as (keyof Settings)[]) {
+      const val = scopedConfig.get<Settings[typeof key]>(key);
+      config[key] = val !== undefined ? { ...SettingsWrapper.DEFAULT[key], ...val } : SettingsWrapper.DEFAULT[key];
+    }
     super(config);
   }
 
@@ -45,7 +50,6 @@ export class SettingsWrapper extends TypedMap<Settings> implements Persistable {
 
   set<K extends keyof Settings>(key: K, value: Settings[K]): this {
     super.set(key, value);
-    console.log(`Setting context key: bsjs-push-pull.${key} to ${JSON.stringify(value)}`);
     this.store();
     return this;
   }
@@ -75,7 +79,8 @@ export class SettingsWrapper extends TypedMap<Settings> implements Persistable {
       const config = vscode.workspace.getConfiguration(App.appKey);
 
       // Set context variable for immediate UI responsiveness
-      vscode.commands.executeCommand('setContext', `bsjs-push-pull.${key}`, value);
+      vscode.commands.executeCommand('setContext', `${App.appKey}.${key}`, value);
+      console.log(`Setting context key: ${App.appKey}.${key} to ${JSON.stringify(value)}`);
 
       if (update) {
         try {
@@ -97,11 +102,14 @@ export class SettingsWrapper extends TypedMap<Settings> implements Persistable {
    */
   sync(): void {
     // Read the effective configuration value (includes recent updates)
-    const inspectResult = vscode.workspace.getConfiguration().inspect<Settings>(App.appKey);
-    const config = inspectResult?.globalValue || SettingsWrapper.DEFAULT;
+    const scopedConfig = vscode.workspace.getConfiguration(App.appKey);
     // Merge with defaults to ensure all keys are present
     // It appears VScode likes to drop keys that are set to undefined or false for some reason
-    const fleshedOut = { ...SettingsWrapper.DEFAULT, ...config };
+    const fleshedOut: Settings = {} as Settings;
+    for (const key of Object.keys(SettingsWrapper.DEFAULT) as (keyof Settings)[]) {
+      const val = scopedConfig.get<Settings[typeof key]>(key);
+      fleshedOut[key] = val !== undefined ? { ...SettingsWrapper.DEFAULT[key], ...val } : SettingsWrapper.DEFAULT[key];
+    }
 
     // Update each property individually to maintain type safety
     for (const key of Object.keys(fleshedOut)) {

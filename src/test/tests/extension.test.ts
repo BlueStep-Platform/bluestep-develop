@@ -47,13 +47,13 @@ import { ScriptFactory } from '../../main/app/util/script/ScriptFactory';
 //       subscriptions: [],
 //       workspaceState: {
 //         get: (key: string) => {
-//           if (key === 'bsjs-push-pull.debugMode') {
+//           if (key === 'bluestep-develop.debugMode') {
 //             return { enabled: false };
 //           }
 //           return undefined;
 //         },
 //         update: async () => undefined,
-//         keys: () => ['bsjs-push-pull.debugMode']
+//         keys: () => ['bluestep-develop.debugMode']
 //       },
 //       globalState: {
 //         get: () => undefined,
@@ -76,17 +76,17 @@ import { ScriptFactory } from '../../main/app/util/script/ScriptFactory';
 //       logUri: vscode.Uri.file('/test/logs'),
 //       extensionMode: vscode.ExtensionMode.Test,
 //       extension: {
-//         id: 'bluestep-systems.bsjs-push-pull',
+//         id: 'bluestep-systems.bluestep-develop',
 //         extensionUri: vscode.Uri.file('/test/extension'),
 //         extensionPath: '/test/extension',
 //         isActive: true,
 //         packageJSON: {
 //           version: '1.0.0-test',
-//           name: 'bsjs-push-pull',
+//           name: 'bluestep-develop',
 //           contributes: {
 //             commands: [
-//               { command: 'bsjs-push-pull.pushScript', title: 'Push Script' },
-//               { command: 'bsjs-push-pull.pullScript', title: 'Pull Script' }
+//               { command: 'bluestep-develop.pushScript', title: 'Push Script' },
+//               { command: 'bluestep-develop.pullScript', title: 'Pull Script' }
 //             ]
 //           }
 //         },
@@ -98,7 +98,7 @@ import { ScriptFactory } from '../../main/app/util/script/ScriptFactory';
 
 //     // Mock vscode.extensions.getExtension to return our mock extension
 //     vscode.extensions.getExtension = (extensionId: string) => {
-//       if (extensionId === 'bluestep-systems.bsjs-push-pull') {
+//       if (extensionId === 'bluestep-systems.bluestep-develop') {
 //         return mockContext.extension;
 //       }
 //       return undefined;
@@ -135,22 +135,22 @@ import { ScriptFactory } from '../../main/app/util/script/ScriptFactory';
 //       App.init(mockContext);
 
 //       const expectedCommands = [
-//         'bsjs-push-pull.pushScript',
-//         'bsjs-push-pull.pullScript',
-//         'bsjs-push-pull.pullCurrent',
-//         'bsjs-push-pull.pushCurrent',
-//         'bsjs-push-pull.updateCredentials',
-//         'bsjs-push-pull.runTask',
-//         'bsjs-push-pull.checkForUpdates',
-//         'bsjs-push-pull.notify',
-//         'bsjs-push-pull.quickDeploy',
-//         'bsjs-push-pull.testTask',
-//         'bsjs-push-pull.snapshot',
-//         'bsjs-push-pull.report',
-//         'bsjs-push-pull.clearSettings',
-//         'bsjs-push-pull.clearSessions',
-//         'bsjs-push-pull.clearAll',
-//         'bsjs-push-pull.toggleDebug'
+//         'bluestep-develop.pushScript',
+//         'bluestep-develop.pullScript',
+//         'bluestep-develop.pullCurrent',
+//         'bluestep-develop.pushCurrent',
+//         'bluestep-develop.updateCredentials',
+//         'bluestep-develop.runTask',
+//         'bluestep-develop.checkForUpdates',
+//         'bluestep-develop.notify',
+//         'bluestep-develop.quickDeploy',
+//         'bluestep-develop.testTask',
+//         'bluestep-develop.snapshot',
+//         'bluestep-develop.report',
+//         'bluestep-develop.clearSettings',
+//         'bluestep-develop.clearSessions',
+//         'bluestep-develop.clearAll',
+//         'bluestep-develop.toggleDebug'
 //       ];
 
 //       expectedCommands.forEach(commandName => {

@@ -82,13 +82,13 @@ npm run package-extension  # Create .vsix package
 ### Update System
 - Custom GitHub releases-based update checker (`src/main/app/services/UpdateChecker.ts`)
 - Runs 5 seconds after startup, checks every 24 hours
-- Configured via `bsjs-push-pull.updateCheck.*` settings
+- Configured via `bluestep-develop.updateCheck.*` settings
 
 ### Auto-Save Push+Snapshot
 - Implemented in `src/main/app/services/AutoSaveHandler.ts`
 - Registered as a `vscode.workspace.onDidSaveTextDocument` listener (for `onSave` mode) and a
   `vscode.tasks.onDidStartTask` listener (for `onBuild` mode) in `App.init()`
-- Controlled by the `bsjs-push-pull.autoSave.trigger` setting (enum: `never` | `onSave` | `onBuild`;
+- Controlled by the `bluestep-develop.autoSave.trigger` setting (enum: `never` | `onSave` | `onBuild`;
   default: `'never'`)
   - `never`   – feature disabled
   - `onSave`  – triggers on file save (previous behaviour)

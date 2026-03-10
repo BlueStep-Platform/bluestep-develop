@@ -67,13 +67,13 @@ import { MockFileSystem } from '../../main/app/util/fs/FileSystemProvider';
 //       logUri: vscode.Uri.file('/test/logs'),
 //       extensionMode: vscode.ExtensionMode.Test,
 //       extension: {
-//         id: 'bluestep-systems.bsjs-push-pull',
+//         id: 'bluestep-systems.bluestep-develop',
 //         extensionUri: vscode.Uri.file('/test/extension'),
 //         extensionPath: '/test/extension',
 //         isActive: true,
 //         packageJSON: {
 //           version: '1.0.0-test',
-//           name: 'bsjs-push-pull'
+//           name: 'bluestep-develop'
 //         },
 //         extensionKind: vscode.ExtensionKind.Workspace,
 //         exports: undefined,
@@ -152,17 +152,17 @@ import { MockFileSystem } from '../../main/app/util/fs/FileSystemProvider';
 
 //       // Verify specific commands are registered
 //       const expectedCommands = [
-//         'bsjs-push-pull.pushScript',
-//         'bsjs-push-pull.pullScript',
-//         'bsjs-push-pull.pullCurrent',
-//         'bsjs-push-pull.pushCurrent',
-//         'bsjs-push-pull.updateCredentials',
-//         'bsjs-push-pull.runTask',
-//         'bsjs-push-pull.checkForUpdates',
-//         'bsjs-push-pull.notify',
-//         'bsjs-push-pull.quickDeploy',
-//         'bsjs-push-pull.testTask',
-//         'bsjs-push-pull.snapshot'
+//         'bluestep-develop.pushScript',
+//         'bluestep-develop.pullScript',
+//         'bluestep-develop.pullCurrent',
+//         'bluestep-develop.pushCurrent',
+//         'bluestep-develop.updateCredentials',
+//         'bluestep-develop.runTask',
+//         'bluestep-develop.checkForUpdates',
+//         'bluestep-develop.notify',
+//         'bluestep-develop.quickDeploy',
+//         'bluestep-develop.testTask',
+//         'bluestep-develop.snapshot'
 //       ];
 
 //       expectedCommands.forEach(commandName => {
@@ -182,22 +182,22 @@ import { MockFileSystem } from '../../main/app/util/fs/FileSystemProvider';
 //   suite('Command Registration and Disposables', () => {
 //     test('should have all expected disposables in the map', () => {
 //       const expectedCommands = [
-//         'bsjs-push-pull.pushScript',
-//         'bsjs-push-pull.pullScript',
-//         'bsjs-push-pull.pullCurrent',
-//         'bsjs-push-pull.pushCurrent',
-//         'bsjs-push-pull.updateCredentials',
-//         'bsjs-push-pull.runTask',
-//         'bsjs-push-pull.checkForUpdates',
-//         'bsjs-push-pull.notify',
-//         'bsjs-push-pull.quickDeploy',
-//         'bsjs-push-pull.testTask',
-//         'bsjs-push-pull.snapshot',
-//         'bsjs-push-pull.report',
-//         'bsjs-push-pull.clearSettings',
-//         'bsjs-push-pull.clearSessions',
-//         'bsjs-push-pull.clearAll',
-//         'bsjs-push-pull.toggleDebug'
+//         'bluestep-develop.pushScript',
+//         'bluestep-develop.pullScript',
+//         'bluestep-develop.pullCurrent',
+//         'bluestep-develop.pushCurrent',
+//         'bluestep-develop.updateCredentials',
+//         'bluestep-develop.runTask',
+//         'bluestep-develop.checkForUpdates',
+//         'bluestep-develop.notify',
+//         'bluestep-develop.quickDeploy',
+//         'bluestep-develop.testTask',
+//         'bluestep-develop.snapshot',
+//         'bluestep-develop.report',
+//         'bluestep-develop.clearSettings',
+//         'bluestep-develop.clearSessions',
+//         'bluestep-develop.clearAll',
+//         'bluestep-develop.toggleDebug'
 //       ];
 
 //       expectedCommands.forEach(commandName => {
@@ -272,7 +272,7 @@ import { MockFileSystem } from '../../main/app/util/fs/FileSystemProvider';
 //     //   // Mock the vscode.extensions API
 //     //   const originalGetExtension = vscode.extensions.getExtension;
 //     //   vscode.extensions.getExtension = () => ({
-//     //     id: 'bluestep-systems.bsjs-push-pull',
+//     //     id: 'bluestep-systems.bluestep-develop',
 //     //     extensionUri: vscode.Uri.file('/test'),
 //     //     extensionPath: '/test',
 //     //     isActive: true,
@@ -308,7 +308,7 @@ import { MockFileSystem } from '../../main/app/util/fs/FileSystemProvider';
 //     // test('should throw PackageJsonNotFoundError when packageJSON missing', () => {
 //     //   const originalGetExtension = vscode.extensions.getExtension;
 //     //   vscode.extensions.getExtension = () => ({
-//     //     id: 'bluestep-systems.bsjs-push-pull',
+//     //     id: 'bluestep-systems.bluestep-develop',
 //     //     extensionUri: vscode.Uri.file('/test'),
 //     //     extensionPath: '/test',
 //     //     isActive: true,
@@ -330,7 +330,7 @@ import { MockFileSystem } from '../../main/app/util/fs/FileSystemProvider';
 //     // test('should throw PackageJsonNotFoundError when version missing', () => {
 //     //   const originalGetExtension = vscode.extensions.getExtension;
 //     //   vscode.extensions.getExtension = () => ({
-//     //     id: 'bluestep-systems.bsjs-push-pull',
+//     //     id: 'bluestep-systems.bluestep-develop',
 //     //     extensionUri: vscode.Uri.file('/test'),
 //     //     extensionPath: '/test',
 //     //     isActive: true,
@@ -498,12 +498,12 @@ import { MockFileSystem } from '../../main/app/util/fs/FileSystemProvider';
 
 //   suite('App Key and Constants', () => {
 //     test('should have correct app key', () => {
-//       assert.strictEqual(App.appKey, 'bsjs-push-pull');
+//       assert.strictEqual(App.appKey, 'bluestep-develop');
 //     });
 
 //     test('should use app key consistently across methods', () => {
 //       // The app key should be used for settings prefixing and configuration checks
-//       assert.strictEqual(App.appKey, 'bsjs-push-pull', 'App key should be consistent');
+//       assert.strictEqual(App.appKey, 'bluestep-develop', 'App key should be consistent');
 //     });
 //   });
 

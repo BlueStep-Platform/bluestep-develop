@@ -107,7 +107,7 @@ npm run package-extension
 mkdir -p ./packages
 
 # Verify exactly one vsix file was created
-VSIX_FILES=(bsjs-push-pull-*.vsix)
+VSIX_FILES=(bluestep-develop-*.vsix)
 if [[ ${#VSIX_FILES[@]} -eq 0 ]]; then
   echo "❌ Error: No VSIX file was created"
   exit 1
