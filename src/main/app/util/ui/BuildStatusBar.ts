@@ -11,11 +11,20 @@ let activeCount = 0;
  */
 export namespace BuildStatusBar {
 
-  /** Call once during extension activation to create the status bar item. */
+  /**
+   * Call once during extension activation to create the status bar item.
+   * If operations were already counted before init (e.g. during activation),
+   * the item is shown immediately so in-flight operations are not missed.
+   * @lastreviewed null
+   */
   export function init(context: vscode.ExtensionContext): void {
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
     statusBarItem.tooltip = 'BlueStep push in progress';
     context.subscriptions.push(statusBarItem);
+    if (activeCount > 0) {
+      statusBarItem.text = `$(sync~spin) B6P: Pushing…`;
+      statusBarItem.show();
+    }
   }
 
   /**
