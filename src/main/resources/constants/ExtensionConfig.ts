@@ -7,7 +7,7 @@ const _pkg = require("../../../../package.json") as { publisher: string; name: s
  */
 export namespace ExtensionConfig {
   export const EXTENSION_ID = `${_pkg.publisher}.${_pkg.name}`;
-  export const EXTENSION_NAME_PREFIX = "bluestep-develop";
+  export const EXTENSION_NAME_PREFIX = _pkg.name;
   export const REPO_OWNER = "bluestep-systems";
   export const REPO_NAME = "vscode-extension";
 }

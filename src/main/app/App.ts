@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { type ExtensionPackageJson, type ReadOnlyMap } from '../../../types';
-import { OutputChannels, SettingsKeys } from '../resources/constants';
+import { ExtensionConfig, OutputChannels, SettingsKeys } from '../resources/constants';
 import { Auth } from './authentication';
 import { SESSION_MANAGER as SM } from './b6p_session/SessionManager';
 import { ORG_CACHE as OC } from './cache/OrgCache';
@@ -8,11 +8,11 @@ import { ContextNode } from './context/ContextNode';
 import ctrlPCommands from './ctrl-p-commands';
 import { handleAutoBuild, handleAutoSave, handleBuildKeybinding } from './services/AutoSaveHandler';
 import readOnlyCheck from './services/ReadOnlyChecker';
-import { BuildStatusBar } from './util/ui/BuildStatusBar';
 import { UPDATE_MANAGER as UM } from './services/UpdateManager';
 import { Err } from './util/Err';
 import { SettingsWrapper } from './util/PseudoMaps';
 import { Alert } from './util/ui/Alert';
+import { BuildStatusBar } from './util/ui/BuildStatusBar';
 
 
 
@@ -64,7 +64,7 @@ export const App = new class extends ContextNode {
         App.toggleDebugMode();
       })],
       ['bluestep-develop.openSettings', vscode.commands.registerCommand('bluestep-develop.openSettings', async () => {
-        vscode.commands.executeCommand('workbench.action.openSettings', "@ext:bluestep-systems.bluestep-develop");
+        return vscode.commands.executeCommand('workbench.action.openSettings', `@ext:${ExtensionConfig.EXTENSION_ID}`);
       })],
       ['bluestep-develop.triggerBuild', vscode.commands.registerCommand('bluestep-develop.triggerBuild', handleBuildKeybinding)]
     ]);
