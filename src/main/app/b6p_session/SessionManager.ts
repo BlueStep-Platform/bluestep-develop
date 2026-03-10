@@ -248,6 +248,7 @@ export const SESSION_MANAGER = new class extends ContextNode {
   /**
    * Ensures a valid session exists for the given URL's origin, logging in if necessary.
    * Call this before spawning parallel fetch operations to avoid redundant concurrent logins.
+   * @lastreviewed null
    * @param url Any URL belonging to the target origin.
    */
   public async ensureSession(url: string | URL): Promise<void> {
