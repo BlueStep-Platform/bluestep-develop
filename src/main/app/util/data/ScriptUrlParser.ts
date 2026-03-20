@@ -177,7 +177,7 @@ export class ScriptUrlParser {
       if (parts.length !== 2) {
         throw new Err.ScriptUrlParserError(`Problem parsing script ID from ${gqlUrl.href}, got unexpected format: ${parents2[0].id}`);
       }
-      this._scriptName = parents2[0].displayName.replaceAll(/\/|\\/g, '_');
+      this._scriptName = parents2[0].displayName.replaceAll(/[/\\:*?"<>|]/g, '_');
       this._scriptKey = { seqnum: parts[1], classid: parts[0] };
       return void 0;
     } catch (e) {
